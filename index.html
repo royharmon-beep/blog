@@ -2123,27 +2123,219 @@ function loadDraft() {
    SAMPLE CONTENT
    ============================================ */
 function loadSample() {
-  editor.innerHTML = `<h1>Why Your Parish Needs More Than a Website</h1>
-<p>Most parishes have a website. Fewer have a digital ministry strategy that actually moves people from the pew to engaged participation.</p>
-<h2>The disconnected tools problem</h2>
-<p>Your bulletin lives in one tool, online giving in another, registrations in a third, and the website in a fourth. Every Sunday, your staff spends hours copying data between them.</p>
-<blockquote class="orange-border-left"><p>"The biggest barrier to digital ministry isn't budget. It's the time staff lose to manual work that should be automated."</p></blockquote>
-<h3>What integrated tools actually solve</h3>
-<div class="callout-box callout2"><h3>The 3 areas to audit first</h3><p>Before investing in new tools, look at where your team is spending the most time on repetitive tasks.</p></div>
+  editor.innerHTML = `<h1>The eCatholic Blog Style Guide</h1>
+<p>A reference post showing every block, list, callout, and blockquote style available in the eCatholic blog editor. Use it as a visual guide while you build real posts.</p>
+<h1>Headings</h1>
+<hr>
+<h1>This is a Header 1</h1>
+<h2>This is a Header 2</h2>
+<h3>This is a Header 3</h3>
+<h4>This is a header 4 (callout)</h4>
+<h5>This is a header 5</h5>
+<p>This is normal text.<span class="wysiwygColor2">&nbsp;</span>This is normal text.&nbsp;This is normal text.&nbsp;This is normal text.&nbsp;This is normal text.&nbsp;This is normal text.&nbsp;This is normal text.&nbsp;This is normal text.&nbsp;This is normal text.&nbsp;This is normal text.&nbsp;This is normal text.&nbsp;This is normal text.&nbsp;This is normal text.&nbsp;This is normal text.&nbsp;This is normal text.&nbsp;This is normal text.&nbsp;This is normal text.&nbsp;This is normal text.</p>
+<p><strong>This is bolded text.</strong></p>
+<p><em>This is italicized text.</em></p>
+<br>
+<h3>How to properly embed a video!</h3>
+<div class="fluid-width-video-wrapper">
+	<iframe allowfullscreen="" frameborder="0" height="360" src="https://player.vimeo.com/video/280982693" width="640"></iframe>
+</div>
+<p>Don&#39;t forget to <em><strong>add the script</strong></em> at the end of the post&#39;s source code.</p>
+<blockquote><strong>Hint</strong>: The script code is included at the end of this post. Access the source code to copy the script!</blockquote>
+<h1>Blockquotes</h1>
+<hr>
+<hr class="small">
+<blockquote>
+	<p>This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;</p>
+</blockquote>
+<blockquote class="orange">
+	<p>This is a blockquote. This is a blockquote. This is a blockquote. This is a blockquote. This is a blockquote. <a href="/" target="_blank" rel="noopener noreferrer">This is a blockquote.</a> This is a blockquote. This is a blockquote. This is a blockquote.&nbsp;</p>
+</blockquote>
+<blockquote class="blue">
+	<p>This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;</p>
+</blockquote>
+<blockquote class="orange-border-left">
+	<p>This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;</p>
+</blockquote>
+<blockquote class="tan-border-block">
+	<p>This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;</p>
+</blockquote>
+<blockquote class="blue-border-block">
+	<p>This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;This is a blockquote.&nbsp;</p>
+</blockquote>
+<h1>Lists</h1>
+<hr>There are different types of lists:
+<h3>Ordered lists</h3>
+<ol>
+	<li style="margin-bottom: 10px;">Item 1</li>
+	<li>Item 2</li>
+	<li>Item 3</li>
+</ol>
+<h3>Unordered lists</h3>
+<ul>
+	<li>Item 1</li>
+	<li>Item 2</li>
+	<li>Item 3</li>
+</ul>
+<h3>Description lists</h3>
+<p>Below is an example of how to create the dl element and how to change the color of the number within a dl element. Of course, we&#39;d usually just use one dl number color in a single list. :)</p>
 <dl class="orange">
-  <dt>1</dt>
-  <dd><p>Map every tool your parish currently uses for communication, giving, and registration.</p></dd>
+	<dt>1</dt>
+	<dd>
+		<h2>This is how to make the dl number eC orange</h2>
+		<p>Quisque velit nisi, pretium ut lacinia in, elementum id enim. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec velit neque, auctor sit amet aliquam vel, ullamcorper sit amet ligula. Pellentesque in ipsum id orci porta dapibus. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+	</dd>
 </dl>
-<dl class="orange">
-  <dt>2</dt>
-  <dd><p>Track how many hours staff spend each week moving data between them.</p></dd>
+<dl class="blue">
+	<dt>2</dt>
+	<dd>
+		<h2>This is how to make the dl number eC blue</h2>
+		<p>Quisque velit nisi, pretium ut lacinia in, elementum id enim. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec velit neque, auctor sit amet aliquam vel, ullamcorper sit amet ligula. Pellentesque in ipsum id orci porta dapibus. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+	</dd>
 </dl>
-<dl class="orange">
-  <dt>3</dt>
-  <dd><p>Identify the top 2 integrations that would save the most time.</p></dd>
+<dl class="light-orange">
+	<dt>2</dt>
+	<dd>
+		<h2>This is how to make the dl number Light Orange</h2>
+		<p>Quisque velit nisi, pretium ut lacinia in, elementum id enim. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec velit neque, auctor sit amet aliquam vel, ullamcorper sit amet ligula. Pellentesque in ipsum id orci porta dapibus. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+	</dd>
 </dl>
-<div class="callout-box callout4"><h3>Take the free Parish Digital Health Check</h3><p>Get a personalized report on how your parish's tools are working together — and where you're losing time to manual work.</p><p><a class="htmlButton htmlButton1" href="https://ecatholic.com/quiz" target="_blank">Take the Quiz</a></p></div>
-<p>Ready to bring everything together? <a href="https://ecatholic.com">Learn more about eCatholic</a>.</p>`;
+<dl>
+	<dt>4</dt>
+	<dd>
+		<h2>This is the regular dl number style (light blue)</h2>
+		<p>Quisque velit nisi, pretium ut lacinia in, elementum id enim. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec velit neque, auctor sit amet aliquam vel, ullamcorper sit amet ligula. Pellentesque in ipsum id orci porta dapibus. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+	</dd>
+</dl>
+<h1>Callouts</h1>
+<p>There are a few different types of callouts</p>
+<div class="callout1" style="font-size: 20px; color: #3297d6; font-weight: 400;">
+	<p>This is a callout style 1. This will usually be a bit longer, so I&#39;m typing extra words to make it look good. Remember to <em>wrap it in tags</em> or else it shows up bolded.</p>
+</div>
+<p>Some regular text can go here.&nbsp;Some regular text can go here.&nbsp;Some regular text can go here.&nbsp;Some regular text can go here.&nbsp;Some regular text can go here.&nbsp;</p>
+<div class="callout-box callout2" style="border: 1px solid #ccc; border-radius: 8px; background: linear-gradient(180deg, #E9EFF9 9.05%, #F1E7E3 82.79%); padding: 20px 40px;">
+	<h2>This is a really cool h2 within the callout style 2</h2>
+	<p>This is some paragraph text within a callout style 2. Quisque velit nisi, pretium ut lacinia in, elementum id enim. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae.</p>
+</div>
+<h3>Here&#39;s a really cool h3</h3>
+<p>This is&nbsp;some regular paragraph text: Quisque velit nisi, pretium ut lacinia in, elementum id enim. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae.</p>
+<div class="callout-box callout2">
+	<p>Here&#39;s a regular callout style 2 with just paragraph text...<strong>no heading</strong>. Looks pretty cool, eh?</p>
+</div>
+<div class="callout-box callout3">
+	<p>Here&#39;s a regular callout style 3 with just paragraph text...<strong>no heading</strong>. Looks pretty cool, eh?</p>
+</div>
+<div class="callout-box callout4">
+	<p>Here&#39;s a regular callout style 4 with just paragraph text...<strong>no heading</strong>. Looks pretty cool, eh?</p>
+</div>
+<div class="callout-box callout5">
+	<p>Here&#39;s a regular callout style 5 with just paragraph text...<strong>no heading</strong>. Looks pretty cool, eh?</p>
+</div>
+<h1>Want to get fancy? Here&#39;s what you can do.</h1>
+<dl>
+	<dt>1</dt>
+	<dd>
+		<h2>You can even put a callout style 2 inside a dl</h2>
+		<p>This is just paragraph text...the callout style 2 is below! Quisque velit nisi, pretium ut lacinia in, elementum id enim. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae.</p>
+		<div class="callout-box callout2">
+			<h2>Here&#39;s the callout style 2</h2>
+			<p>*Mind blown.* Quisque velit nisi, pretium ut lacinia in, elementum id enim. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+		</div>
+	</dd>
+</dl>Why yes, yes it does.
+<h1>Here is a Heading 1 element that is short</h1>
+<h2>Here is a Heading 2 element that is short</h2>
+<h3>Here is a Heading 3 element that is short</h3>
+<h4>Here is a Heading 4 element that is short</h4>
+<h5>Here is a Heading 5 element that is short</h5>
+<blockquote>
+	<h3>This is a heading in a blockquote</h3>
+	<p>I&#39;ve been using heading 4 as a type of callout, which probably isn&#39;t best practice for SEO. So I really don&#39;t need heading 4 at all. Instead, I&#39;d like to have a few different callout styles. I could just code them similarly to how I use the callouts in HelpScout (?). Just let me know what would work best. Here&#39;s what I&#39;m thinking - quote</p>
+</blockquote>
+<p>Ordered list:</p>
+<ol>
+	<li>thing one</li>
+	<li>thing two</li>
+	<li>thing coffee</li>
+</ol>
+<p>Unordered list:&nbsp;</p>
+<ul>
+	<li>coffee</li>
+	<li>who cares</li>
+	<li>coffee again</li>
+</ul>
+<p>Description list:<a href="https://www.w3schools.com/tags/tag_dl.asp" target="_blank">&nbsp;https://www.w3schools.com/tags/tag_dl.asp</a></p>
+<dl class="dark-blue">
+	<dt>1</dt>
+	<dd>First action item that you should do</dd>
+	<dt>2</dt>
+	<dd>When you&#39;re done with that, drink some coffee</dd>
+	<dt>3</dt>
+	<dd>I&#39;ve been using heading 4 as a type of callout, which probably isn&#39;t best practice for SEO. So I really don&#39;t need heading 4 at all. Instead, I&#39;d like to have a few different callout styles. I could just code them similarly to how I use the callouts in HelpScout (?).
+		<section class="callout...">Just let me know what would work best. Here&#39;s what I&#39;m thinking</section>
+	</dd>
+</dl>
+<div class="callout-box callout2">
+	<h1>Heading 1</h1>
+</div>
+<div class="custom-designs-highlight">
+	<div class="site">
+		<div class="site-thumb"><img alt="" src="/pictures/2022/6/frassati.jpg" class="fr-fic fr-dii"></div>
+		<div class="site-text">
+			<div class="testimonial-author-image" style="width: 75px; height: 75px;"><img alt="Christine Wohar Headshot" src="/pictures/2019/3/Christine-Wohar.jpg" class="fr-fic fr-dii"></div><pre><span style="font-size:18px;">Christine Wohar</span></pre><span><em><span style="font-size:18px;">Executive Director, FrassatiUSA&nbsp;- Nashville, TN</span></em></span><pre class="inline-flex"><span class="sprite-wrapper"><span class="sprite-holder websites black"> </span></span><span class="sprite-wrapper"><span class="sprite-holder payments black"> </span></span></pre>
+			<p>&quot;eCatholic has helped our ministry achieve a truly global reach. I&#39;ve been an eCatholic customer since 2007, and having recently gone through the custom design process I feel like I&#39;ve &#39;graduated!&#39;</p>
+			<p>Being able to manage the website myself is critical since I don&#39;t have the luxury of having a large communications team. Although small, FrassatiUSA can touch lives the world over thanks in part to the medium provided by the great team at eCatholic. I&#39;m so very grateful!&quot;</p><a class="htmlButton htmlButton1" href="https://frassatiusa.org/" target="_blank">Visit Website</a></div></div>
+	<div class="site reverse grey-background">
+		<div class="site-header">
+			<h2>Best Catholic school websites</h2>
+			<p>Some text about the best catholic school websites out there!</p>
+		</div>
+		<div class="site-text">
+			<p>&quot;eCatholic has helped our ministry achieve a truly global reach. I&#39;ve been an eCatholic customer since 2007, and having recently gone through the custom design process I feel like I&#39;ve &#39;graduated!&#39;</p>
+			<p>Being able to manage the website myself is critical since I don&#39;t have the luxury of having a large communications team. Although small, FrassatiUSA can touch lives the world over thanks in part to the medium provided by the great team at eCatholic. I&#39;m so very grateful!&quot;</p><a class="htmlButton htmlButton1" href="https://frassatiusa.org/" target="_blank">Visit Website</a></div>
+		<div class="site-thumb"><img alt="" src="/pictures/2022/6/frassati.jpg" class="fr-fic fr-dii"></div></div></div>
+<h2>The Elements below is just a place for them to live in the edit view. The design and live view will move them where they need to be in the layout.</h2>
+<p>Copy and Paste the ones you need to use! Comment / Uncomment on this page to see them in action.</p>
+<!--controller to set up the alternative header option - will initialize in the design / live view-->
+<div class="alternate-header">&nbsp;</div>
+<!--additional elements that will be moved on the page with JS in the design / live view-->
+<!--gated content to appear with the alternate header under the date-->
+<div class="gated-content add-border add-radius">
+	<div><img src="/pictures/2026/3/test-graphic.png" class="fr-fic fr-dii"></div>
+	<div><span>Catholic Digital Ministry</span>
+		<p>Download a copy of The State of Catholic Digital Ministry, gathering insights from nearly 500 parishes, schools, and dioceses across the United States.</p><a class="htmlButton htmlButton1" href="/">Download Now</a></div></div>
+<br>
+<!--jump links to use on with both header layout options-->
+<div class="jump-to-section"><span>&nbsp;Jump To Section...</span>
+	<ul>
+		<li><a href="/">Jump Link 1</a></li>
+		<li><a href="/">Jump Link 2</a></li>
+		<li><a href="/">Jump Link 3</a></li>
+		<li><a href="/">Jump Link 4</a></li>
+		<li><a href="/">Jump Link 5</a></li>
+	</ul>
+</div>
+<br>
+<!--additional articles to appear with the alternate header to the right of jump to section-->
+<div class="additional-articles"><span>Articles you might like...</span>
+	<ul class="add-border add-radius">
+		<li>
+			<a href="/">
+				<div><img src="/pictures/2026/3/test-blog-post-1.jpg" class="fr-fic fr-dii"></div>
+				<div><span>[Webinar] Smarter Tools for a Stronger Church</span></div>
+			</a></li>
+		<li>
+			<a href="/">
+				<div><img src="/pictures/2026/3/test-blog-post-2.jpg" class="fr-fic fr-dii"></div>
+				<div><span>End-of-Year Giving: Tips for Success</span></div>
+			</a></li>
+	</ul>
+</div>
+<br>
+<!--using a video instead of blog image-->
+<!--<div class="featured-video">
+	<iframe allowfullscreen="" frameborder="0" height="360" src="https://player.vimeo.com/video/1171143988" width="640"><span class="fr-mk" style="display: none;"> </span><span class="fr-mk" style="display: none;"> </span><span class="fr-mk" style="display: none;"> </span><span class="fr-mk" style="display: none;"> </span></iframe>
+</div>-->`;
   updateOutput();
 }
 

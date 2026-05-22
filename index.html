@@ -1,0 +1,2754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eCatholic Blog Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<style>
+/* ============================================
+   BRAND TOKENS
+   ============================================ */
+:root {
+  --brand-navy: #19273e;
+  --brand-orange: #f15d30;
+  --brand-orange-dark: #d04d22;
+  --brand-orange-soft: #fbcbb3;
+  --brand-orange-tint: #faf0e8;
+  --brand-blue: #4259aa;
+  --brand-tan: #ebe5da;
+  --bg-page: #f4f4f4;
+  --bg-surface: #fff;
+  --bg-surface-alt: #faf9f7;
+  --bg-input: #fff;
+  --text-primary: #27282a;
+  --text-muted: #6b6e74;
+  --text-faint: #9aa0a8;
+  --border: #ebe5da;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+/* ============================================
+   APP CHROME
+   ============================================ */
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-page);
+  overflow: hidden;
+}
+.app {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  height: 100vh;
+}
+
+/* Header */
+.app-header {
+  background: var(--brand-navy);
+  color: #fff;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.app-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+.app-header h1 {
+  font-family: 'EB Garamond', serif;
+  font-size: 20px;
+  margin: 0;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.app-header .subtitle {
+  font-size: 12px;
+  color: var(--brand-orange-soft);
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.save-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  white-space: nowrap;
+}
+.save-indicator .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #5bc06a;
+  flex-shrink: 0;
+}
+.save-indicator.saving .dot { background: #f0b441; }
+.save-indicator.error .dot { background: #e26553; }
+
+/* Toolbar */
+.toolbar {
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  padding: 6px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  align-items: center;
+}
+.toolbar-group {
+  display: flex;
+  gap: 2px;
+  padding: 0 6px;
+  position: relative;
+}
+.toolbar-group + .toolbar-group::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: var(--border);
+}
+.toolbar-group.spacer { flex: 1; padding: 0; }
+.toolbar-group.spacer::before { display: none; }
+
+.tb-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px 9px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.tb-btn:hover {
+  background: var(--brand-orange-tint);
+}
+.tb-btn:focus-visible {
+  outline: 2px solid var(--brand-orange);
+  outline-offset: 1px;
+}
+.tb-btn[aria-pressed="true"],
+.tb-btn.active {
+  background: var(--brand-orange-tint);
+  color: var(--brand-orange-dark);
+  border-color: var(--brand-orange-soft);
+}
+.tb-btn i { font-size: 13px; }
+.tb-btn .caret { font-size: 9px; opacity: 0.55; margin-left: 1px; }
+.tb-btn.icon-only { padding: 6px 8px; }
+
+/* Block-type pill (shows current block label) */
+.block-type-btn {
+  min-width: 118px;
+  justify-content: space-between;
+}
+
+/* Dropdowns */
+.tb-dropdown { position: relative; display: inline-block; }
+.tb-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+  padding: 5px;
+  z-index: 100;
+  min-width: 220px;
+  display: none;
+  max-height: 460px;
+  overflow-y: auto;
+}
+.tb-dropdown.open .tb-dropdown-menu { display: block; }
+.tb-dropdown-section {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-faint);
+  padding: 8px 10px 4px;
+}
+.tb-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-primary);
+  cursor: pointer;
+  border-radius: 6px;
+}
+.tb-dropdown-item:hover { background: var(--brand-orange-tint); }
+.tb-dropdown-item .label { display: flex; flex-direction: column; gap: 1px; }
+.tb-dropdown-item .label small {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* Dropdown mini-previews (replaces colored chips) */
+.mini-preview {
+  width: 56px;
+  height: 36px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  color: var(--text-muted);
+  background: var(--bg-surface-alt);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  position: relative;
+}
+.mini-preview .quote-mark {
+  color: var(--brand-orange);
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+  margin-right: 4px;
+}
+.mini-preview .lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.mini-preview .lines span {
+  display: block;
+  height: 3px;
+  background: currentColor;
+  border-radius: 1px;
+  opacity: 0.55;
+}
+.mini-preview .lines span:nth-child(2) { width: 70%; }
+.mini-preview.bq-orange { background: var(--brand-orange); }
+.mini-preview.bq-orange .quote-mark,
+.mini-preview.bq-orange .lines { color: #fff; }
+.mini-preview.bq-blue { background: var(--brand-blue); }
+.mini-preview.bq-blue .quote-mark,
+.mini-preview.bq-blue .lines { color: #fff; }
+.mini-preview.bq-orange-left {
+  background: transparent;
+  border-left: 4px solid var(--brand-orange);
+  border-radius: 0;
+}
+.mini-preview.bq-tan-block {
+  background: transparent;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-left: none; border-right: none;
+  border-radius: 0;
+}
+.mini-preview.bq-blue-block {
+  background: transparent;
+  border-top: 2px solid var(--brand-blue);
+  border-bottom: 2px solid var(--brand-blue);
+  border-left: none; border-right: none;
+  border-radius: 0;
+}
+.mini-preview.callout-1 { background: var(--bg-surface); border: 1px dashed var(--border); color: #3297d6; font-size: 11px; font-weight: 500; }
+.mini-preview.callout-2 { background: #efefef; }
+.mini-preview.callout-3 { background: linear-gradient(228deg, rgba(234,242,253,0.85) 29%, rgba(247,185,157,0.85) 75%); }
+.mini-preview.callout-4 { background: var(--brand-blue); color: #fff; }
+.mini-preview.callout-4 .lines span { background: rgba(255,255,255,0.7); }
+.mini-preview.callout-5 { background: var(--text-primary); color: #fff; }
+.mini-preview.callout-5 .lines span { background: rgba(255,255,255,0.7); }
+
+.mini-preview .step-num {
+  width: 18px; height: 18px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-right: 5px;
+}
+.mini-preview .step-line {
+  height: 3px;
+  width: 22px;
+  background: var(--text-muted);
+  opacity: 0.5;
+  border-radius: 1px;
+}
+.mini-preview.dl-default .step-num { background: #fff; border: 1px solid var(--border); color: var(--text-primary); }
+.mini-preview.dl-orange .step-num { background: var(--brand-orange); color: #fff; }
+.mini-preview.dl-blue .step-num { background: var(--brand-blue); color: #fff; }
+.mini-preview.dl-light-orange .step-num { background: var(--brand-orange-soft); color: var(--text-primary); }
+.mini-preview.dl-dark-blue .step-num { background: var(--brand-navy); color: #fff; }
+
+.mini-preview.btn-outline {
+  background: transparent;
+}
+.mini-preview.btn-outline .btn-shape {
+  border: 1.5px solid var(--brand-orange);
+  color: var(--brand-orange);
+  font-size: 9px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.mini-preview.btn-filled {
+  background: transparent;
+}
+.mini-preview.btn-filled .btn-shape {
+  background: var(--brand-orange);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+/* Main panels */
+.main {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  overflow: hidden;
+  border-top: 1px solid var(--border);
+}
+.panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+  background: var(--bg-surface);
+  min-width: 0;
+}
+.panel:last-child { border-right: none; }
+.panel-header {
+  background: var(--bg-surface-alt);
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  min-height: 40px;
+}
+.panel-header .title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 500;
+}
+.panel-header .title i { color: var(--text-faint); }
+.panel-header .actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.panel-header .ghost-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-weight: 500;
+}
+.panel-header .ghost-btn:hover {
+  background: var(--bg-surface);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+/* Tabs (merged into the right panel header row) */
+.output-tabs {
+  display: inline-flex;
+  gap: 2px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 2px;
+}
+.output-tab {
+  background: transparent;
+  border: none;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background 0.12s, color 0.12s;
+}
+.output-tab:hover { color: var(--text-primary); }
+.output-tab.active {
+  color: var(--text-primary);
+  background: var(--bg-surface-alt);
+  box-shadow: var(--shadow-sm);
+}
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 30px;
+  background: var(--bg-surface-alt);
+  position: relative;
+}
+
+/* Block handle — contextual control that follows the cursor */
+.block-handle {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  transition: background 0.12s, color 0.12s, border-color 0.12s, box-shadow 0.12s;
+}
+.block-handle:hover {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.block-handle.menu-open {
+  background: var(--brand-orange-tint);
+  color: var(--brand-orange-dark);
+  border-color: var(--brand-orange-soft);
+}
+.block-handle i { font-size: 12px; }
+
+/* Block-menu controls inside the popover */
+.popover .block-styles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+.popover .block-style {
+  border: 1.5px solid var(--border);
+  background: var(--bg-surface);
+  border-radius: 8px;
+  padding: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.12s, background 0.12s;
+}
+.popover .block-style:hover { border-color: var(--brand-orange-soft); }
+.popover .block-style.on {
+  border-color: var(--brand-orange);
+  background: var(--brand-orange-tint);
+}
+.popover .block-style .mini-preview {
+  width: 50px;
+  height: 30px;
+  font-size: 10px;
+}
+.popover .block-style .mini-preview .step-num {
+  width: 14px;
+  height: 14px;
+  font-size: 9px;
+  margin-right: 4px;
+}
+.popover .block-style .mini-preview .step-line { width: 16px; height: 2px; }
+.popover .block-style .mini-preview .quote-mark { font-size: 14px; margin-right: 3px; }
+.popover .block-style .mini-preview .lines span { height: 2px; }
+
+.popover .block-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+.popover .block-pill {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 5px 11px;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.popover .block-pill:hover {
+  background: var(--brand-orange-tint);
+  border-color: var(--brand-orange-soft);
+}
+.popover .block-pill.on {
+  background: var(--brand-orange-tint);
+  border-color: var(--brand-orange);
+  color: var(--brand-orange-dark);
+}
+.popover .block-pill i { font-size: 10px; }
+.panel-body .preview {
+  background: #fff;
+  padding: 40px 50px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* HTML output column */
+.html-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+#htmlOutput {
+  width: 100%;
+  flex: 1;
+  border: none;
+  padding: 16px 18px;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--text-primary);
+  background: var(--bg-surface-alt);
+  resize: none;
+  outline: none;
+  tab-size: 2;
+}
+#htmlOutput:focus {
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--brand-orange-soft);
+}
+
+/* Sticky bottom action bar in the right pane */
+.copy-bar {
+  border-top: 1px solid var(--border);
+  background: var(--bg-surface);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.copy-bar .hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.copy-bar .hint kbd {
+  background: var(--bg-surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--text-primary);
+}
+.copy-btn {
+  background: var(--brand-orange);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 9px 18px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.12s, transform 0.05s;
+}
+.copy-btn:hover { background: var(--brand-orange-dark); }
+.copy-btn:active { transform: translateY(1px); }
+.copy-btn.copied {
+  background: #2f8a4a;
+}
+.copy-btn:focus-visible {
+  outline: 2px solid var(--brand-orange);
+  outline-offset: 2px;
+}
+
+/* Inline popover (replaces native prompt/confirm) */
+.popover {
+  position: absolute;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+  padding: 14px;
+  z-index: 200;
+  min-width: 280px;
+  max-width: 360px;
+}
+.popover .title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.popover .title i { color: var(--text-muted); }
+.popover label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: 4px;
+  margin-top: 8px;
+}
+.popover label:first-of-type { margin-top: 0; }
+.popover input[type="text"],
+.popover input[type="url"] {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-input);
+  outline: none;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.popover input:focus {
+  border-color: var(--brand-orange);
+  box-shadow: 0 0 0 3px rgba(241,93,48,0.12);
+}
+.popover .actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+.popover .pop-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+.popover .pop-btn:hover { background: var(--bg-surface-alt); }
+.popover .pop-btn.primary {
+  background: var(--brand-orange);
+  border-color: var(--brand-orange);
+  color: #fff;
+}
+.popover .pop-btn.primary:hover { background: var(--brand-orange-dark); border-color: var(--brand-orange-dark); }
+.popover .pop-btn.danger {
+  background: #e26553;
+  border-color: #e26553;
+  color: #fff;
+}
+.popover .pop-btn.danger:hover { background: #c2503f; border-color: #c2503f; }
+.popover .helper {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.popover .style-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.popover .style-opt {
+  border: 1.5px solid var(--border);
+  background: var(--bg-surface);
+  border-radius: 8px;
+  padding: 10px 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition: border-color 0.12s, background 0.12s;
+}
+.popover .style-opt:hover { border-color: var(--brand-orange-soft); }
+.popover .style-opt.on {
+  border-color: var(--brand-orange);
+  background: var(--brand-orange-tint);
+  color: var(--brand-orange-dark);
+}
+.popover .style-opt .preview-pill {
+  font-weight: 600;
+  font-size: 11px;
+  padding: 4px 14px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+.popover .style-opt .preview-pill.outline {
+  border: 1.5px solid var(--brand-orange);
+  color: var(--brand-orange);
+  background: transparent;
+}
+.popover .style-opt .preview-pill.filled {
+  background: var(--brand-orange);
+  color: #fff;
+  border: 1.5px solid var(--brand-orange);
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: var(--text-primary);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+  z-index: 1000;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ============================================
+   PREVIEW STYLES (scoped from eCatholic blog CSS)
+   ============================================ */
+.preview {
+  font-family: 'Inter', Arial, sans-serif;
+  font-size: 16px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  min-height: 400px;
+  outline: none;
+}
+.preview:focus { outline: none; }
+.preview h1 {
+  font-family: 'EB Garamond', serif;
+  font-size: 36px;
+  font-weight: 400;
+  margin: 0.67em 0 0.5em;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+.preview h2 {
+  font-family: 'EB Garamond', serif;
+  font-size: 28px;
+  font-weight: 400;
+  margin: 0.83em 0 0.5em;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+.preview h3 {
+  font-family: 'Inter', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 1.5em 0 0.5em;
+  color: var(--text-primary);
+}
+.preview h4 {
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  margin: 1.33em 0 0.5em;
+  color: var(--text-primary);
+}
+.preview h5 {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 1.5em 0 0.5em;
+}
+.preview p { margin: 0 0 1em; }
+.preview a { color: var(--brand-orange); text-decoration: none; }
+.preview a:hover { color: var(--brand-blue); }
+.preview strong { font-weight: 700; }
+.preview em { font-style: italic; }
+.preview ol, .preview ul { padding-left: 30px; margin: 1em 0; }
+.preview ol li, .preview ul li { margin-bottom: 10px; }
+
+.preview blockquote {
+  margin: 1em 40px;
+  padding: 20px 30px;
+}
+.preview blockquote[class] {
+  position: relative;
+  padding-left: 84px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 30px;
+  margin: 1.5em 0;
+  border-radius: 8px;
+  background: var(--blockquote-background-clr, var(--brand-orange-tint));
+  color: var(--blockquote-font-clr, var(--text-primary));
+}
+.preview blockquote[class]::before {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  content: "\f10d";
+  font-size: 34px;
+  font-weight: 900;
+  font-family: "Font Awesome 6 Free";
+  line-height: 1;
+  color: var(--brand-orange);
+}
+.preview blockquote[class] a:not([class]) {
+  color: var(--blockquote-links-clr, var(--brand-orange));
+}
+.preview blockquote[class] a:not([class]):hover {
+  color: var(--blockquote-links-clr-hover, var(--brand-blue));
+}
+.preview blockquote.orange {
+  --blockquote-background-clr: var(--brand-orange);
+  --blockquote-font-clr: #fff;
+  --blockquote-links-clr: rgba(255,255,255,0.75);
+  --blockquote-links-clr-hover: #fff;
+}
+.preview blockquote.orange::before { color: #fff; }
+.preview blockquote.blue {
+  --blockquote-background-clr: var(--brand-blue);
+  --blockquote-font-clr: #fff;
+  --blockquote-links-clr: rgba(255,255,255,0.75);
+  --blockquote-links-clr-hover: #fff;
+}
+.preview blockquote.blue::before { color: #fff; }
+.preview blockquote.orange-border-left {
+  --blockquote-background-clr: transparent;
+  background: transparent;
+  border: 0;
+  border-left: 5px solid var(--brand-orange);
+  border-radius: 0;
+  padding-left: 60px;
+}
+.preview blockquote.orange-border-left::before {
+  font-size: 28px;
+  color: var(--brand-orange);
+  top: 15px;
+  left: 20px;
+}
+.preview blockquote.tan-border-block {
+  --blockquote-background-clr: transparent;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding-left: 50px;
+}
+.preview blockquote.tan-border-block::before {
+  font-size: 28px;
+  color: var(--brand-orange);
+  left: 0;
+  top: 20px;
+}
+.preview blockquote.blue-border-block {
+  --blockquote-background-clr: transparent;
+  background: transparent;
+  border: 0;
+  border-top: 2px solid var(--brand-blue);
+  border-bottom: 2px solid var(--brand-blue);
+  border-radius: 0;
+  padding-left: 60px;
+}
+.preview blockquote.blue-border-block::before { color: var(--brand-blue); }
+
+.preview dl {
+  position: relative;
+  margin: 1.5em 0;
+}
+.preview dl dt {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+  color: var(--text-primary);
+  font-weight: 600;
+  background-color: #fff;
+  border: 1px solid var(--border);
+  position: absolute;
+  top: 5px;
+  left: 0;
+}
+.preview dl dd { margin: 0 0 20px 65px; }
+.preview dl dd h2 { margin-top: 0; }
+.preview dl.orange dt { color: #fff; background-color: var(--brand-orange); border-color: var(--brand-orange); }
+.preview dl.blue dt { color: #fff; background-color: var(--brand-blue); border-color: var(--brand-blue); }
+.preview dl.light-orange dt { color: var(--text-primary); background-color: var(--brand-orange-soft); border-color: var(--brand-orange-soft); }
+.preview dl.dark-blue dt { color: #fff; background-color: var(--brand-navy); border-color: var(--brand-navy); }
+
+.preview [class*="callout"] {
+  border-style: solid;
+  border-width: 1px;
+  padding: 20px 40px;
+  margin: 2em 0;
+  border-color: transparent;
+}
+.preview .callout1 {
+  color: #3297d6;
+  font-weight: 400;
+  font-size: 20px;
+  position: relative;
+  border: none;
+  padding: 20px 0;
+}
+.preview .callout2 { border: 1px solid var(--border); border-radius: 8px; background: #efefef; }
+.preview .callout3 {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: linear-gradient(228deg, rgba(234,242,253,0.6) 29%, rgba(247,185,157,0.6) 75%);
+}
+.preview .callout4 {
+  border: 1px solid var(--brand-blue);
+  border-radius: 8px;
+  background: var(--brand-blue);
+  padding: 20px 40px;
+  color: #fff;
+}
+.preview .callout4 h1, .preview .callout4 h2, .preview .callout4 h3,
+.preview .callout4 h4, .preview .callout4 h5 { color: #fff; }
+.preview .callout4 a { color: var(--brand-orange-soft); }
+.preview .callout4 a:hover { color: #fff; }
+.preview .callout5 {
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 8px;
+  background: var(--text-primary);
+  color: #fff;
+}
+.preview .callout5 h1, .preview .callout5 h2, .preview .callout5 h3,
+.preview .callout5 h4, .preview .callout5 h5 { color: var(--bg-surface-alt); }
+.preview .callout5 a { color: var(--brand-orange-soft); }
+.preview .callout5 a:hover { color: #fff; }
+
+.preview .htmlButton {
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  box-sizing: border-box;
+  display: inline-flex;
+  min-width: 150px;
+  margin: 10px 20px 10px 0;
+  padding: 7.5px 28px;
+  border-radius: 99px;
+  line-height: 1.5;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--brand-orange);
+  background-color: transparent;
+  border: 2px solid var(--brand-orange);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+.preview .htmlButton1 { color: var(--brand-orange); background-color: transparent; border: 2px solid var(--brand-orange); }
+.preview .htmlButton2 { background-color: var(--brand-orange); color: #fff; border-color: var(--brand-orange); }
+
+.preview .fluid-width-video-wrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  margin: 1.5em 0;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.preview .fluid-width-video-wrapper iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.preview hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2em 0;
+}
+.preview img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+/* Placeholder selection — highlight ghost text that should be replaced */
+.preview .placeholder-text {
+  background: rgba(241,93,48,0.10);
+  border-radius: 3px;
+  padding: 0 2px;
+  margin: 0 -2px;
+}
+
+/* Empty state */
+.preview:empty::before {
+  content: "Start typing or click a toolbar button to insert a block…";
+  color: var(--text-faint);
+  font-style: italic;
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Header -->
+  <div class="app-header">
+    <div class="app-header-left">
+      <h1>eCatholic Blog Editor</h1>
+      <span class="subtitle">WYSIWYG &rarr; clean HTML</span>
+    </div>
+    <div class="save-indicator" id="saveIndicator" title="Drafts are autosaved locally in this browser">
+      <span class="dot"></span>
+      <span class="label">Saved</span>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar" id="toolbar">
+    <!-- PRIMARY: block type -->
+    <div class="toolbar-group">
+      <div class="tb-dropdown" data-dropdown="blocks">
+        <button class="tb-btn block-type-btn" data-block-type-btn type="button" title="Block type">
+          <span><i class="fa-solid fa-paragraph"></i> <span data-block-label>Paragraph</span></span>
+          <i class="fa-solid fa-caret-down caret"></i>
+        </button>
+        <div class="tb-dropdown-menu">
+          <button class="tb-dropdown-item" data-block="p" type="button">
+            <span style="font-family:'Inter',sans-serif;font-size:14px;">Paragraph</span>
+          </button>
+          <button class="tb-dropdown-item" data-block="h1" type="button">
+            <span style="font-family:'EB Garamond',serif;font-size:20px;line-height:1;">Heading 1</span>
+          </button>
+          <button class="tb-dropdown-item" data-block="h2" type="button">
+            <span style="font-family:'EB Garamond',serif;font-size:17px;line-height:1;">Heading 2</span>
+          </button>
+          <button class="tb-dropdown-item" data-block="h3" type="button">
+            <span style="font-family:'Inter',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;font-size:13px;">Heading 3 (subhead)</span>
+          </button>
+          <button class="tb-dropdown-item" data-block="h4" type="button">
+            <span style="font-family:'Inter',sans-serif;font-size:14px;">Heading 4</span>
+          </button>
+          <button class="tb-dropdown-item" data-block="h5" type="button">
+            <span style="font-family:'Inter',sans-serif;font-weight:700;font-size:13px;">Heading 5</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRIMARY: inline formatting -->
+    <div class="toolbar-group">
+      <button class="tb-btn icon-only" data-cmd="bold" type="button" title="Bold (⌘B)" aria-pressed="false"><i class="fa-solid fa-bold"></i></button>
+      <button class="tb-btn icon-only" data-cmd="italic" type="button" title="Italic (⌘I)" aria-pressed="false"><i class="fa-solid fa-italic"></i></button>
+      <button class="tb-btn icon-only" data-action="link" type="button" title="Insert link (⌘K)"><i class="fa-solid fa-link"></i></button>
+    </div>
+
+    <!-- PRIMARY: lists -->
+    <div class="toolbar-group">
+      <button class="tb-btn icon-only" data-cmd="insertUnorderedList" type="button" title="Bullet list" aria-pressed="false"><i class="fa-solid fa-list-ul"></i></button>
+      <button class="tb-btn icon-only" data-cmd="insertOrderedList" type="button" title="Numbered list" aria-pressed="false"><i class="fa-solid fa-list-ol"></i></button>
+    </div>
+
+    <!-- INSERT: structured blocks -->
+    <div class="toolbar-group">
+      <div class="tb-dropdown" data-dropdown="blockquote">
+        <button class="tb-btn" type="button" title="Insert blockquote">
+          <i class="fa-solid fa-quote-left"></i> Quote <i class="fa-solid fa-caret-down caret"></i>
+        </button>
+        <div class="tb-dropdown-menu">
+          <div class="tb-dropdown-section">Blockquote styles</div>
+          <button class="tb-dropdown-item" data-blockquote="orange" type="button">
+            <span class="mini-preview bq-orange"><span class="quote-mark">&ldquo;</span><span class="lines"><span></span><span></span></span></span>
+            <span class="label">Orange<small>Filled, white text</small></span>
+          </button>
+          <button class="tb-dropdown-item" data-blockquote="blue" type="button">
+            <span class="mini-preview bq-blue"><span class="quote-mark">&ldquo;</span><span class="lines"><span></span><span></span></span></span>
+            <span class="label">Blue<small>Filled, white text</small></span>
+          </button>
+          <button class="tb-dropdown-item" data-blockquote="orange-border-left" type="button">
+            <span class="mini-preview bq-orange-left"><span class="quote-mark">&ldquo;</span><span class="lines"><span></span><span></span></span></span>
+            <span class="label">Orange border-left<small>Pull-quote style</small></span>
+          </button>
+          <button class="tb-dropdown-item" data-blockquote="tan-border-block" type="button">
+            <span class="mini-preview bq-tan-block"><span class="quote-mark">&ldquo;</span><span class="lines"><span></span><span></span></span></span>
+            <span class="label">Tan border-block<small>Subtle horizontal rules</small></span>
+          </button>
+          <button class="tb-dropdown-item" data-blockquote="blue-border-block" type="button">
+            <span class="mini-preview bq-blue-block"><span class="quote-mark">&ldquo;</span><span class="lines"><span></span><span></span></span></span>
+            <span class="label">Blue border-block<small>Strong horizontal rules</small></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="tb-dropdown" data-dropdown="callout">
+        <button class="tb-btn" type="button" title="Insert callout">
+          <i class="fa-solid fa-bullhorn"></i> Callout <i class="fa-solid fa-caret-down caret"></i>
+        </button>
+        <div class="tb-dropdown-menu">
+          <div class="tb-dropdown-section">Callout styles</div>
+          <button class="tb-dropdown-item" data-callout="1" type="button">
+            <span class="mini-preview callout-1">Aa</span>
+            <span class="label">Callout 1<small>Large blue lead text</small></span>
+          </button>
+          <button class="tb-dropdown-item" data-callout="2" type="button">
+            <span class="mini-preview callout-2"><span class="lines"><span></span><span></span></span></span>
+            <span class="label">Callout 2<small>Gray box</small></span>
+          </button>
+          <button class="tb-dropdown-item" data-callout="3" type="button">
+            <span class="mini-preview callout-3"><span class="lines"><span></span><span></span></span></span>
+            <span class="label">Callout 3<small>Soft gradient box</small></span>
+          </button>
+          <button class="tb-dropdown-item" data-callout="4" type="button">
+            <span class="mini-preview callout-4"><span class="lines"><span></span><span></span></span></span>
+            <span class="label">Callout 4<small>Blue, white text</small></span>
+          </button>
+          <button class="tb-dropdown-item" data-callout="5" type="button">
+            <span class="mini-preview callout-5"><span class="lines"><span></span><span></span></span></span>
+            <span class="label">Callout 5<small>Dark, white text</small></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="tb-dropdown" data-dropdown="dl">
+        <button class="tb-btn" type="button" title="Insert numbered steps">
+          <i class="fa-solid fa-arrow-down-1-9"></i> Steps <i class="fa-solid fa-caret-down caret"></i>
+        </button>
+        <div class="tb-dropdown-menu">
+          <div class="tb-dropdown-section">Numbered step styles</div>
+          <button class="tb-dropdown-item" data-dl="" type="button">
+            <span class="mini-preview dl-default"><span class="step-num">1</span><span class="step-line"></span></span>
+            <span class="label">Default<small>White, subtle border</small></span>
+          </button>
+          <button class="tb-dropdown-item" data-dl="orange" type="button">
+            <span class="mini-preview dl-orange"><span class="step-num">1</span><span class="step-line"></span></span>
+            <span class="label">Orange</span>
+          </button>
+          <button class="tb-dropdown-item" data-dl="blue" type="button">
+            <span class="mini-preview dl-blue"><span class="step-num">1</span><span class="step-line"></span></span>
+            <span class="label">Blue</span>
+          </button>
+          <button class="tb-dropdown-item" data-dl="light-orange" type="button">
+            <span class="mini-preview dl-light-orange"><span class="step-num">1</span><span class="step-line"></span></span>
+            <span class="label">Light orange</span>
+          </button>
+          <button class="tb-dropdown-item" data-dl="dark-blue" type="button">
+            <span class="mini-preview dl-dark-blue"><span class="step-num">1</span><span class="step-line"></span></span>
+            <span class="label">Dark blue</span>
+          </button>
+        </div>
+      </div>
+
+      <button class="tb-btn" data-action="button" type="button" title="Insert or edit button"><i class="fa-solid fa-square-arrow-up-right"></i> Button</button>
+      <button class="tb-btn" data-action="image" type="button" title="Insert or edit image"><i class="fa-solid fa-image"></i> Image</button>
+      <button class="tb-btn" data-action="video" type="button" title="Insert or edit Vimeo / YouTube embed"><i class="fa-solid fa-video"></i> Video</button>
+    </div>
+
+    <div class="toolbar-group spacer"></div>
+
+    <!-- UTILITY: history -->
+    <div class="toolbar-group">
+      <button class="tb-btn icon-only" data-cmd="undo" type="button" title="Undo (⌘Z)"><i class="fa-solid fa-rotate-left"></i></button>
+      <button class="tb-btn icon-only" data-cmd="redo" type="button" title="Redo (⌘⇧Z)"><i class="fa-solid fa-rotate-right"></i></button>
+      <button class="tb-btn icon-only" data-action="clear" type="button" title="Clear all"><i class="fa-solid fa-trash"></i></button>
+    </div>
+  </div>
+
+  <!-- Main panels -->
+  <div class="main">
+    <!-- Editor / preview -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="title"><i class="fa-solid fa-eye"></i> Live preview <span style="color:var(--text-faint);font-weight:400;">(editable)</span></span>
+        <div class="actions">
+          <button class="ghost-btn" data-action="load-sample" type="button">Load sample post</button>
+        </div>
+      </div>
+      <div class="panel-body" id="editorPanelBody">
+        <button class="block-handle" id="blockHandle" type="button" aria-label="Block options" title="Block options">
+          <i class="fa-solid fa-grip-vertical"></i>
+        </button>
+        <div id="editor" class="preview" contenteditable="true" spellcheck="true"></div>
+      </div>
+    </div>
+
+    <!-- HTML output -->
+    <div class="panel html-pane">
+      <div class="panel-header">
+        <span class="title"><i class="fa-solid fa-code"></i> Generated HTML</span>
+        <div class="actions">
+          <div class="output-tabs" role="tablist">
+            <button class="output-tab active" data-tab="clean" type="button" role="tab" aria-selected="true">Clean</button>
+            <button class="output-tab" data-tab="formatted" type="button" role="tab" aria-selected="false">Pretty</button>
+          </div>
+        </div>
+      </div>
+      <textarea id="htmlOutput" spellcheck="false" aria-label="Generated HTML output"></textarea>
+      <div class="copy-bar">
+        <div class="hint">Paste into the eCatholic CMS &middot; <kbd>⌘</kbd><kbd>⇧</kbd><kbd>C</kbd> to copy</div>
+        <button class="copy-btn" id="copyBtn" type="button">
+          <i class="fa-solid fa-copy"></i> Copy HTML
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================
+   STATE
+   ============================================ */
+const editor = document.getElementById('editor');
+const htmlOutput = document.getElementById('htmlOutput');
+const saveIndicator = document.getElementById('saveIndicator');
+const STORAGE_KEY = 'ecatholic-blog-editor-draft-v2';
+let currentTab = 'clean';
+let saveTimer = null;
+let activePopover = null;
+let savedRange = null;
+let suppressEditorSync = false;
+let suppressHtmlSync = false;
+
+function escapeAttr(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function saveSelection() {
+  const sel = window.getSelection();
+  if (sel.rangeCount && editor.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+    savedRange = sel.getRangeAt(0).cloneRange();
+  } else {
+    savedRange = null;
+  }
+}
+
+function restoreSelection() {
+  editor.focus();
+  if (savedRange) {
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+  }
+}
+
+function getSelectedText() {
+  if (!savedRange) return '';
+  return savedRange.toString().trim();
+}
+
+function findButtonAt() {
+  return findAncestor('a.htmlButton');
+}
+
+function findImageAt() {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return null;
+  let node = sel.getRangeAt(0).commonAncestorContainer;
+  if (node.nodeType === 3) node = node.parentNode;
+  if (!editor.contains(node)) return null;
+  while (node && node !== editor) {
+    if (node.tagName === 'IMG') return node;
+    if (node.tagName === 'P' && node.children.length === 1 && node.children[0].tagName === 'IMG') {
+      return node.children[0];
+    }
+    node = node.parentNode;
+  }
+  return null;
+}
+
+function findVideoAt() {
+  return findAncestor('.fluid-width-video-wrapper');
+}
+
+/* ============================================
+   UTILITIES
+   ============================================ */
+function findAncestor(selector, withinEditor = true) {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return null;
+  let node = sel.getRangeAt(0).commonAncestorContainer;
+  if (node.nodeType === 3) node = node.parentNode;
+  while (node && node !== document.body) {
+    if (withinEditor && node === editor) return null;
+    if (node.matches && node.matches(selector)) return node;
+    node = node.parentNode;
+  }
+  return null;
+}
+
+function findAnyWrapper() {
+  const callout = findAncestor('[class*="callout"]');
+  if (callout) return { type: 'callout', node: callout };
+  const blockquote = findAncestor('blockquote');
+  if (blockquote) return { type: 'blockquote', node: blockquote };
+  const dl = findAncestor('dl');
+  if (dl) return { type: 'dl', node: dl };
+  return null;
+}
+
+function hasSelection() {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return false;
+  const range = sel.getRangeAt(0);
+  if (range.collapsed) return false;
+  return editor.contains(range.commonAncestorContainer);
+}
+
+function getSelectionHtml() {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return '';
+  const container = document.createElement('div');
+  container.appendChild(sel.getRangeAt(0).cloneContents());
+  return container.innerHTML;
+}
+
+function gatherAdjacentDls(dl) {
+  const dls = [dl];
+  let next = dl.nextElementSibling;
+  while (next && next.tagName === 'DL') {
+    dls.push(next);
+    next = next.nextElementSibling;
+  }
+  let prev = dl.previousElementSibling;
+  while (prev && prev.tagName === 'DL') {
+    dls.unshift(prev);
+    prev = prev.previousElementSibling;
+  }
+  return dls;
+}
+
+function extractInnerContent(wrapper) {
+  if (wrapper.type === 'dl') {
+    const dls = gatherAdjacentDls(wrapper.node);
+    const items = [];
+    dls.forEach(dl => {
+      dl.querySelectorAll('dd').forEach(dd => {
+        const html = dd.innerHTML.trim();
+        if (html) items.push(html);
+      });
+    });
+    return { items, dls };
+  }
+  return { html: wrapper.node.innerHTML.trim(), nodes: [wrapper.node] };
+}
+
+function buildWrapper(type, variantOrNum, content, opts = {}) {
+  const placeholderClass = opts.placeholder ? ' class="placeholder-text"' : '';
+  const wrap = (c) => opts.placeholder ? `<span${placeholderClass}>${c}</span>` : c;
+
+  if (type === 'blockquote') {
+    const cls = variantOrNum ? ` class="${variantOrNum}"` : '';
+    const inner = Array.isArray(content)
+      ? content.map(c => `<p>${wrap(c)}</p>`).join('')
+      : (/<(p|h\d|ul|ol|div)[\s>]/i.test(content) ? content : `<p>${content}</p>`);
+    return `<blockquote${cls}>${inner}</blockquote>`;
+  }
+  if (type === 'callout') {
+    const num = variantOrNum;
+    const inner = Array.isArray(content)
+      ? content.map(c => `<p>${wrap(c)}</p>`).join('')
+      : (/<(p|h\d|ul|ol|div)[\s>]/i.test(content) ? content : `<p>${content}</p>`);
+    return `<div class="callout-box callout${num}">${inner}</div>`;
+  }
+  if (type === 'dl') {
+    const cls = variantOrNum ? ` class="${variantOrNum}"` : '';
+    let items;
+    if (Array.isArray(content)) {
+      items = content;
+    } else {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = content;
+      items = [];
+      if (tmp.querySelector('li')) {
+        tmp.querySelectorAll('li').forEach(li => items.push(li.innerHTML.trim()));
+      } else if (tmp.querySelector('p')) {
+        tmp.querySelectorAll('p').forEach(p => {
+          const t = p.innerHTML.trim();
+          if (t && t !== '<br>') items.push(t);
+        });
+      } else {
+        const text = tmp.innerHTML.split(/<br\s*\/?>|\n/).map(s => s.trim()).filter(Boolean);
+        text.forEach(line => items.push(line));
+      }
+      if (items.length === 0) items.push(content);
+    }
+    return items.map((item, i) =>
+      `<dl${cls}>\n  <dt>${i + 1}</dt>\n  <dd><p>${wrap(item)}</p></dd>\n</dl>`
+    ).join('\n');
+  }
+}
+
+function defaultPlaceholder(type, variantOrNum) {
+  if (type === 'blockquote') return ['Quote text goes here.'];
+  if (type === 'callout') {
+    if (variantOrNum === 1 || variantOrNum === '1') {
+      return ['This is a callout style 1 — use it for emphasized, lead-style text in eCatholic blue.'];
+    }
+    return [`<h3>Callout heading</h3><p>This is callout style ${variantOrNum}. Replace this text with your content.</p>`];
+  }
+  if (type === 'dl') {
+    return [
+      'First step or item — replace with your content.',
+      'Second step or item.',
+      'Third step or item.'
+    ];
+  }
+}
+
+function selectFirstPlaceholder() {
+  const ph = editor.querySelector('.placeholder-text');
+  if (!ph) return;
+  const range = document.createRange();
+  range.selectNodeContents(ph);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  // Drop the highlight class on first input so it doesn't persist in saved HTML
+  ph.classList.add('placeholder-text');
+}
+
+/* ============================================
+   WRAPPER INSERT / SWAP LOGIC
+   ============================================ */
+function applyWrapper(type, variantOrNum) {
+  const wrapper = findAnyWrapper();
+  if (wrapper) {
+    if (wrapper.type === type) {
+      if (type === 'dl') {
+        const dls = gatherAdjacentDls(wrapper.node);
+        dls.forEach(dl => {
+          if (variantOrNum) dl.className = variantOrNum;
+          else dl.removeAttribute('class');
+        });
+      } else if (type === 'blockquote') {
+        if (variantOrNum) wrapper.node.className = variantOrNum;
+        else wrapper.node.removeAttribute('class');
+      } else if (type === 'callout') {
+        const classes = wrapper.node.className.split(/\s+/).filter(c => !/^callout\d+$/.test(c));
+        if (!classes.includes('callout-box')) classes.unshift('callout-box');
+        classes.push('callout' + variantOrNum);
+        wrapper.node.className = classes.join(' ');
+      }
+      updateOutput();
+      closeAllDropdowns();
+      editor.focus();
+      return;
+    }
+    const extracted = extractInnerContent(wrapper);
+    const content = extracted.items || extracted.html;
+    const newHtml = buildWrapper(type, variantOrNum, content);
+    if (wrapper.type === 'dl') {
+      const firstDl = extracted.dls[0];
+      firstDl.insertAdjacentHTML('beforebegin', newHtml);
+      extracted.dls.forEach(dl => dl.remove());
+    } else {
+      wrapper.node.outerHTML = newHtml;
+    }
+    updateOutput();
+    closeAllDropdowns();
+    editor.focus();
+    return;
+  }
+
+  if (hasSelection()) {
+    const selectedHtml = getSelectionHtml();
+    const newHtml = buildWrapper(type, variantOrNum, selectedHtml) + '<p><br></p>';
+    document.execCommand('insertHTML', false, newHtml);
+    updateOutput();
+    closeAllDropdowns();
+    return;
+  }
+
+  const placeholder = defaultPlaceholder(type, variantOrNum);
+  const html = buildWrapper(type, variantOrNum, placeholder, { placeholder: true }) + '<p><br></p>';
+  insertHtml(html);
+  closeAllDropdowns();
+  // Select the first placeholder so the next keystroke replaces it
+  setTimeout(selectFirstPlaceholder, 0);
+}
+
+function insertButtonElement(num, text, url) {
+  const html = `<p><a class="htmlButton htmlButton${num}" href="${url}" target="_blank">${text}</a></p>`;
+  insertHtml(html);
+}
+
+function insertVideoEmbed(url) {
+  let embedUrl = url;
+  if (url.includes('vimeo.com/')) {
+    const id = url.match(/vimeo\.com\/(\d+)/);
+    if (id) embedUrl = `https://player.vimeo.com/video/${id[1]}`;
+  } else if (url.includes('youtube.com/watch') || url.includes('youtu.be/')) {
+    const id = url.match(/(?:v=|youtu\.be\/)([\w-]+)/);
+    if (id) embedUrl = `https://www.youtube.com/embed/${id[1]}`;
+  }
+  const html = `<div class="fluid-width-video-wrapper"><iframe allowfullscreen="" frameborder="0" src="${embedUrl}"></iframe></div><p><br></p>`;
+  insertHtml(html);
+}
+
+function insertImageElement(url, alt) {
+  const html = `<p><img src="${url}" alt="${alt || ''}" class="fr-fic fr-dii"></p>`;
+  insertHtml(html);
+}
+
+function insertHtml(html) {
+  editor.focus();
+  document.execCommand('insertHTML', false, html);
+  updateOutput();
+}
+
+function clearEditor() {
+  editor.innerHTML = '';
+  updateOutput();
+  showToast('Editor cleared');
+}
+
+/* ============================================
+   POPOVERS (replace native prompt/confirm)
+   ============================================ */
+function closePopover() {
+  if (activePopover) {
+    activePopover.remove();
+    activePopover = null;
+  }
+  const handle = document.getElementById('blockHandle');
+  if (handle) handle.classList.remove('menu-open');
+  // Re-anchor the handle after a structural action
+  if (typeof positionBlockHandle === 'function') {
+    setTimeout(positionBlockHandle, 0);
+  }
+}
+
+function openPopover(anchorBtn, contentHtml, onMount) {
+  closePopover();
+  closeAllDropdowns();
+  const pop = document.createElement('div');
+  pop.className = 'popover';
+  pop.innerHTML = contentHtml;
+  document.body.appendChild(pop);
+  activePopover = pop;
+
+  // Position below the anchor button, aligned to its left edge
+  const r = anchorBtn.getBoundingClientRect();
+  const popW = pop.offsetWidth;
+  const winW = window.innerWidth;
+  let left = r.left;
+  if (left + popW + 8 > winW) left = Math.max(8, winW - popW - 8);
+  pop.style.top = (r.bottom + 6) + 'px';
+  pop.style.left = left + 'px';
+
+  if (onMount) onMount(pop);
+
+  // Click outside closes
+  setTimeout(() => {
+    document.addEventListener('mousedown', popoverClickOutside, { once: true });
+  }, 0);
+
+  // Esc closes
+  document.addEventListener('keydown', popoverEscHandler);
+}
+function popoverClickOutside(e) {
+  // Clicks on the block handle are handled by its own click listener (it toggles)
+  if (e.target.closest('#blockHandle')) {
+    document.addEventListener('mousedown', popoverClickOutside, { once: true });
+    return;
+  }
+  if (activePopover && !activePopover.contains(e.target)) {
+    closePopover();
+  } else if (activePopover) {
+    document.addEventListener('mousedown', popoverClickOutside, { once: true });
+  }
+}
+function popoverEscHandler(e) {
+  if (e.key === 'Escape' && activePopover) {
+    closePopover();
+    document.removeEventListener('keydown', popoverEscHandler);
+  }
+}
+
+function openLinkPopover(anchor) {
+  saveSelection();
+  const existing = findAncestor('a');
+  const defaultUrl = existing ? existing.getAttribute('href') : 'https://';
+  const helperText = existing
+    ? 'Editing the existing link.'
+    : (savedRange && !savedRange.collapsed
+        ? 'The selected text will become the link.'
+        : 'A new link will be inserted at the cursor.');
+
+  openPopover(anchor, `
+    <div class="title"><i class="fa-solid fa-link"></i> ${existing ? 'Edit link' : 'Insert link'}</div>
+    <label>URL</label>
+    <input type="url" placeholder="https://" value="${escapeAttr(defaultUrl || 'https://')}" data-pop-url />
+    <div class="helper" style="margin-top:6px;">${helperText}</div>
+    <div class="actions">
+      ${existing ? '<button class="pop-btn danger" data-pop-action="unlink" type="button">Remove link</button>' : ''}
+      <button class="pop-btn" data-pop-action="cancel" type="button">Cancel</button>
+      <button class="pop-btn primary" data-pop-action="apply" type="button">${existing ? 'Update' : 'Apply'}</button>
+    </div>
+  `, (pop) => {
+    const input = pop.querySelector('[data-pop-url]');
+    input.focus();
+    input.select();
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); pop.querySelector('[data-pop-action="apply"]').click(); }
+    });
+    pop.addEventListener('click', e => {
+      const action = e.target.closest('[data-pop-action]')?.dataset.popAction;
+      if (!action) return;
+      if (action === 'cancel') return closePopover();
+      restoreSelection();
+      if (action === 'unlink') {
+        document.execCommand('unlink');
+      } else if (action === 'apply') {
+        const url = input.value.trim();
+        if (url) {
+          if (savedRange && savedRange.collapsed && !existing) {
+            document.execCommand('insertHTML', false, `<a href="${escapeAttr(url)}">${escapeAttr(url)}</a>`);
+          } else if (existing) {
+            existing.setAttribute('href', url);
+          } else {
+            document.execCommand('createLink', false, url);
+          }
+        }
+      }
+      updateOutput();
+      closePopover();
+    });
+  });
+}
+
+function openImagePopover(anchor) {
+  saveSelection();
+  const existing = findImageAt();
+  const editing = !!existing;
+  const currentUrl = existing ? (existing.getAttribute('src') || '') : '';
+  const currentAlt = existing ? (existing.getAttribute('alt') || '') : '';
+
+  openPopover(anchor, `
+    <div class="title"><i class="fa-solid fa-image"></i> ${editing ? 'Edit image' : 'Insert image'}</div>
+    <label>Image URL</label>
+    <input type="url" placeholder="/pictures/your-image.jpg" value="${escapeAttr(currentUrl)}" data-pop-url />
+    <label>Alt text <span style="font-weight:400;color:var(--text-faint);">(for accessibility)</span></label>
+    <input type="text" placeholder="Describe the image" value="${escapeAttr(currentAlt)}" data-pop-alt />
+    <div class="actions">
+      ${editing ? '<button class="pop-btn danger" data-pop-action="remove" type="button">Remove</button>' : ''}
+      <button class="pop-btn" data-pop-action="cancel" type="button">Cancel</button>
+      <button class="pop-btn primary" data-pop-action="apply" type="button">${editing ? 'Update' : 'Insert'}</button>
+    </div>
+  `, (pop) => {
+    const url = pop.querySelector('[data-pop-url]');
+    const alt = pop.querySelector('[data-pop-alt]');
+    url.focus();
+    url.select();
+    [url, alt].forEach(el => el.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); pop.querySelector('[data-pop-action="apply"]').click(); }
+    }));
+    pop.addEventListener('click', e => {
+      const action = e.target.closest('[data-pop-action]')?.dataset.popAction;
+      if (!action) return;
+      if (action === 'cancel') return closePopover();
+      if (action === 'remove' && existing) {
+        const parentP = existing.closest('p');
+        if (parentP && parentP.children.length === 1 && parentP.children[0] === existing) {
+          parentP.remove();
+        } else {
+          existing.remove();
+        }
+        updateOutput();
+        closePopover();
+        return;
+      }
+      const u = url.value.trim();
+      if (!u) return;
+      if (editing) {
+        existing.setAttribute('src', u);
+        existing.setAttribute('alt', alt.value.trim());
+        updateOutput();
+      } else {
+        restoreSelection();
+        insertImageElement(u, alt.value.trim());
+      }
+      closePopover();
+    });
+  });
+}
+
+function openVideoPopover(anchor) {
+  saveSelection();
+  const existing = findVideoAt();
+  const editing = !!existing;
+  const currentUrl = existing ? (existing.querySelector('iframe')?.getAttribute('src') || '') : '';
+
+  openPopover(anchor, `
+    <div class="title"><i class="fa-solid fa-video"></i> ${editing ? 'Edit video' : 'Insert video'}</div>
+    <label>Vimeo or YouTube URL</label>
+    <input type="url" placeholder="https://vimeo.com/… or https://youtu.be/…" value="${escapeAttr(currentUrl)}" data-pop-url />
+    <div class="helper" style="margin-top:6px;">The video will be embedded responsively at 16:9.</div>
+    <div class="actions">
+      ${editing ? '<button class="pop-btn danger" data-pop-action="remove" type="button">Remove</button>' : ''}
+      <button class="pop-btn" data-pop-action="cancel" type="button">Cancel</button>
+      <button class="pop-btn primary" data-pop-action="apply" type="button">${editing ? 'Update' : 'Embed'}</button>
+    </div>
+  `, (pop) => {
+    const url = pop.querySelector('[data-pop-url]');
+    url.focus();
+    url.select();
+    url.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); pop.querySelector('[data-pop-action="apply"]').click(); }
+    });
+    pop.addEventListener('click', e => {
+      const action = e.target.closest('[data-pop-action]')?.dataset.popAction;
+      if (!action) return;
+      if (action === 'cancel') return closePopover();
+      if (action === 'remove' && existing) {
+        existing.remove();
+        updateOutput();
+        closePopover();
+        return;
+      }
+      const u = url.value.trim();
+      if (!u) return;
+      if (editing) {
+        // Resolve to an embed URL and update the existing iframe in place
+        let embedUrl = u;
+        if (u.includes('vimeo.com/')) {
+          const id = u.match(/vimeo\.com\/(\d+)/);
+          if (id) embedUrl = `https://player.vimeo.com/video/${id[1]}`;
+        } else if (u.includes('youtube.com/watch') || u.includes('youtu.be/')) {
+          const id = u.match(/(?:v=|youtu\.be\/)([\w-]+)/);
+          if (id) embedUrl = `https://www.youtube.com/embed/${id[1]}`;
+        }
+        const iframe = existing.querySelector('iframe');
+        if (iframe) iframe.setAttribute('src', embedUrl);
+        updateOutput();
+      } else {
+        restoreSelection();
+        insertVideoEmbed(u);
+      }
+      closePopover();
+    });
+  });
+}
+
+function openButtonPopover(anchor) {
+  saveSelection();
+  const existing = findButtonAt();
+  const editing = !!existing;
+  const selectedText = !editing ? getSelectedText() : '';
+
+  const currentStyle = existing
+    ? (existing.classList.contains('htmlButton2') ? 2 : 1)
+    : 1;
+  const currentText = existing
+    ? existing.textContent.trim()
+    : (selectedText || 'Learn more');
+  const currentUrl = existing
+    ? (existing.getAttribute('href') || 'https://')
+    : 'https://';
+
+  openPopover(anchor, `
+    <div class="title"><i class="fa-solid fa-square-arrow-up-right"></i> ${editing ? 'Edit button' : 'Insert button'}</div>
+    <label>Button text</label>
+    <input type="text" placeholder="Learn more" value="${escapeAttr(currentText)}" data-pop-text />
+    <label>URL</label>
+    <input type="url" placeholder="https://" value="${escapeAttr(currentUrl)}" data-pop-url />
+    <label>Style</label>
+    <div class="style-toggle">
+      <button type="button" class="style-opt ${currentStyle === 1 ? 'on' : ''}" data-style="1">
+        <span class="preview-pill outline">Button</span>
+        <span>Outline</span>
+      </button>
+      <button type="button" class="style-opt ${currentStyle === 2 ? 'on' : ''}" data-style="2">
+        <span class="preview-pill filled">Button</span>
+        <span>Filled</span>
+      </button>
+    </div>
+    <div class="actions">
+      ${editing ? '<button class="pop-btn danger" data-pop-action="remove" type="button">Remove</button>' : ''}
+      <button class="pop-btn" data-pop-action="cancel" type="button">Cancel</button>
+      <button class="pop-btn primary" data-pop-action="apply" type="button">${editing ? 'Update' : 'Insert'}</button>
+    </div>
+  `, (pop) => {
+    let selectedStyle = currentStyle;
+    pop.querySelectorAll('.style-opt').forEach(s => {
+      s.addEventListener('click', () => {
+        pop.querySelectorAll('.style-opt').forEach(x => x.classList.remove('on'));
+        s.classList.add('on');
+        selectedStyle = parseInt(s.dataset.style, 10);
+      });
+    });
+    const textEl = pop.querySelector('[data-pop-text]');
+    const urlEl = pop.querySelector('[data-pop-url]');
+    textEl.focus();
+    textEl.select();
+    [textEl, urlEl].forEach(el => el.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); pop.querySelector('[data-pop-action="apply"]').click(); }
+    }));
+    pop.addEventListener('click', e => {
+      const action = e.target.closest('[data-pop-action]')?.dataset.popAction;
+      if (!action) return;
+      if (action === 'cancel') return closePopover();
+      if (action === 'remove' && existing) {
+        const parentP = existing.closest('p');
+        if (parentP && parentP.children.length === 1 && parentP.children[0] === existing) {
+          parentP.remove();
+        } else {
+          existing.outerHTML = existing.textContent;
+        }
+        updateOutput();
+        closePopover();
+        return;
+      }
+      const t = textEl.value.trim();
+      const u = urlEl.value.trim();
+      if (!t || !u) return;
+      if (editing) {
+        existing.setAttribute('href', u);
+        existing.setAttribute('target', '_blank');
+        existing.className = `htmlButton htmlButton${selectedStyle}`;
+        existing.textContent = t;
+        updateOutput();
+      } else {
+        restoreSelection();
+        insertButtonElement(selectedStyle, t, u);
+      }
+      closePopover();
+    });
+  });
+}
+
+function openClearPopover(anchor) {
+  openPopover(anchor, `
+    <div class="title"><i class="fa-solid fa-triangle-exclamation" style="color:#e26553;"></i> Clear the editor?</div>
+    <div class="helper">Your current draft is autosaved in this browser, but clearing it removes it. Copy the HTML first if you want a backup.</div>
+    <div class="actions">
+      <button class="pop-btn" data-pop-action="cancel" type="button">Cancel</button>
+      <button class="pop-btn danger" data-pop-action="apply" type="button">Clear all</button>
+    </div>
+  `, (pop) => {
+    pop.querySelector('[data-pop-action="apply"]').focus();
+    pop.addEventListener('click', e => {
+      const action = e.target.closest('[data-pop-action]')?.dataset.popAction;
+      if (!action) return;
+      if (action === 'cancel') return closePopover();
+      clearEditor();
+      closePopover();
+    });
+  });
+}
+
+/* ============================================
+   DROPDOWNS
+   ============================================ */
+function toggleDropdown(name) {
+  const dd = document.querySelector(`[data-dropdown="${name}"]`);
+  const wasOpen = dd.classList.contains('open');
+  closeAllDropdowns();
+  if (!wasOpen) dd.classList.add('open');
+}
+function closeAllDropdowns() {
+  document.querySelectorAll('.tb-dropdown').forEach(d => d.classList.remove('open'));
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.tb-dropdown')) closeAllDropdowns();
+});
+
+/* ============================================
+   ACTIVE STATE — reflect current selection
+   ============================================ */
+function updateActiveState() {
+  // Inline formatting commands
+  ['bold', 'italic', 'insertUnorderedList', 'insertOrderedList'].forEach(cmd => {
+    const btn = document.querySelector(`[data-cmd="${cmd}"]`);
+    if (!btn) return;
+    try {
+      const on = document.queryCommandState(cmd);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      btn.classList.toggle('active', on);
+    } catch (e) { /* noop */ }
+  });
+
+  // Link / Button / Image / Video — show "active" when cursor is inside one
+  // so the user knows clicking will edit rather than insert.
+  const linkBtn = document.querySelector('[data-action="link"]');
+  if (linkBtn) {
+    const inLink = !!findAncestor('a');
+    linkBtn.classList.toggle('active', inLink);
+    linkBtn.setAttribute('aria-pressed', inLink ? 'true' : 'false');
+  }
+  const buttonBtn = document.querySelector('[data-action="button"]');
+  if (buttonBtn) {
+    const inButton = !!findButtonAt();
+    buttonBtn.classList.toggle('active', inButton);
+    buttonBtn.setAttribute('aria-pressed', inButton ? 'true' : 'false');
+  }
+  const imageBtn = document.querySelector('[data-action="image"]');
+  if (imageBtn) {
+    const inImage = !!findImageAt();
+    imageBtn.classList.toggle('active', inImage);
+    imageBtn.setAttribute('aria-pressed', inImage ? 'true' : 'false');
+  }
+  const videoBtn = document.querySelector('[data-action="video"]');
+  if (videoBtn) {
+    const inVideo = !!findVideoAt();
+    videoBtn.classList.toggle('active', inVideo);
+    videoBtn.setAttribute('aria-pressed', inVideo ? 'true' : 'false');
+  }
+
+  // Current block type label
+  const blockLabel = document.querySelector('[data-block-label]');
+  if (blockLabel) {
+    const sel = window.getSelection();
+    if (sel.rangeCount && editor.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+      let node = sel.getRangeAt(0).commonAncestorContainer;
+      if (node.nodeType === 3) node = node.parentNode;
+      let tag = null;
+      while (node && node !== editor) {
+        const t = node.nodeName?.toLowerCase();
+        if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(t)) { tag = t; break; }
+        node = node.parentNode;
+      }
+      const labels = { p: 'Paragraph', h1: 'Heading 1', h2: 'Heading 2', h3: 'Heading 3', h4: 'Heading 4', h5: 'Heading 5', h6: 'Heading 6' };
+      if (tag && labels[tag]) blockLabel.textContent = labels[tag];
+    }
+  }
+}
+
+/* ============================================
+   HTML OUTPUT / SYNC
+   ============================================ */
+function updateOutput() {
+  if (suppressHtmlSync) return;
+  const raw = editor.innerHTML;
+  const cleaned = cleanHtml(raw);
+  suppressEditorSync = true;
+  htmlOutput.value = currentTab === 'clean' ? cleaned : prettifyHtml(cleaned);
+  suppressEditorSync = false;
+  scheduleAutosave();
+  updateActiveState();
+}
+
+function cleanHtml(html) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  tmp.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+  // Drop placeholder-text spans (just remove the wrapper, keep the children)
+  tmp.querySelectorAll('.placeholder-text').forEach(el => {
+    el.replaceWith(...el.childNodes);
+  });
+  tmp.querySelectorAll('b').forEach(el => {
+    const s = document.createElement('strong');
+    s.innerHTML = el.innerHTML;
+    el.replaceWith(s);
+  });
+  tmp.querySelectorAll('i:not([class])').forEach(el => {
+    const em = document.createElement('em');
+    em.innerHTML = el.innerHTML;
+    el.replaceWith(em);
+  });
+  tmp.querySelectorAll('[style]').forEach(el => {
+    const tag = el.tagName.toLowerCase();
+    if (['span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'li'].includes(tag)) {
+      const style = el.getAttribute('style');
+      if (style && style.includes('text-align')) {
+        const align = style.match(/text-align:\s*[^;]+/);
+        el.setAttribute('style', align ? align[0] : '');
+      } else {
+        el.removeAttribute('style');
+      }
+    }
+  });
+  tmp.querySelectorAll('span:not([class]):not([style])').forEach(el => {
+    el.replaceWith(...el.childNodes);
+  });
+  return tmp.innerHTML.trim();
+}
+
+function prettifyHtml(html) {
+  const block = ['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'dl', 'dt', 'dd', 'section', 'header', 'footer', 'article', 'iframe'];
+  let out = html;
+  block.forEach(tag => {
+    out = out.replace(new RegExp(`</${tag}>`, 'g'), `</${tag}>\n`);
+    out = out.replace(new RegExp(`<${tag}([\\s>])`, 'g'), `\n<${tag}$1`);
+  });
+  out = out.replace(/\n{3,}/g, '\n\n');
+  const lines = out.split('\n');
+  let indent = 0;
+  const pretty = lines.map(line => {
+    const trimmed = line.trim();
+    if (!trimmed) return '';
+    const isClose = /^<\//.test(trimmed);
+    const isSelfClose = /\/>$/.test(trimmed) || /^<(img|br|hr|input|meta|link)/.test(trimmed);
+    const isOpen = /^<[^/]/.test(trimmed) && !isSelfClose;
+    const closesOnSameLine = isOpen && trimmed.includes('</') && trimmed.indexOf('</') > trimmed.indexOf('>');
+    if (isClose) indent = Math.max(0, indent - 1);
+    const result = '  '.repeat(indent) + trimmed;
+    if (isOpen && !closesOnSameLine) indent++;
+    return result;
+  });
+  return pretty.join('\n').trim();
+}
+
+function switchTab(tab, tabBtn) {
+  currentTab = tab;
+  document.querySelectorAll('.output-tab').forEach(t => {
+    const on = t === tabBtn;
+    t.classList.toggle('active', on);
+    t.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  updateOutput();
+}
+
+function copyHtml() {
+  const text = htmlOutput.value;
+  const btn = document.getElementById('copyBtn');
+  navigator.clipboard.writeText(text).then(() => {
+    btn.classList.add('copied');
+    const original = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = original;
+    }, 1600);
+    showToast('HTML copied to clipboard');
+  }).catch(() => {
+    htmlOutput.select();
+    document.execCommand('copy');
+    showToast('HTML copied to clipboard');
+  });
+}
+
+function syncEditorFromHtmlPane() {
+  if (suppressEditorSync) return;
+  suppressHtmlSync = true;
+  editor.innerHTML = htmlOutput.value;
+  suppressHtmlSync = false;
+  scheduleAutosave();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+/* ============================================
+   AUTOSAVE (localStorage)
+   ============================================ */
+function setSaveState(state) {
+  saveIndicator.classList.remove('saving', 'error');
+  const label = saveIndicator.querySelector('.label');
+  if (state === 'saving') { saveIndicator.classList.add('saving'); label.textContent = 'Saving…'; }
+  else if (state === 'error') { saveIndicator.classList.add('error'); label.textContent = 'Save failed'; }
+  else { label.textContent = 'Saved'; }
+}
+
+function scheduleAutosave() {
+  setSaveState('saving');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, editor.innerHTML);
+      setSaveState('saved');
+    } catch (e) {
+      setSaveState('error');
+    }
+  }, 400);
+}
+
+function loadDraft() {
+  try {
+    const draft = localStorage.getItem(STORAGE_KEY);
+    if (draft && draft.trim()) {
+      editor.innerHTML = draft;
+      return true;
+    }
+  } catch (e) { /* noop */ }
+  return false;
+}
+
+/* ============================================
+   SAMPLE CONTENT
+   ============================================ */
+function loadSample() {
+  editor.innerHTML = `<h1>Why Your Parish Needs More Than a Website</h1>
+<p>Most parishes have a website. Fewer have a digital ministry strategy that actually moves people from the pew to engaged participation.</p>
+<h2>The disconnected tools problem</h2>
+<p>Your bulletin lives in one tool, online giving in another, registrations in a third, and the website in a fourth. Every Sunday, your staff spends hours copying data between them.</p>
+<blockquote class="orange-border-left"><p>"The biggest barrier to digital ministry isn't budget. It's the time staff lose to manual work that should be automated."</p></blockquote>
+<h3>What integrated tools actually solve</h3>
+<div class="callout-box callout2"><h3>The 3 areas to audit first</h3><p>Before investing in new tools, look at where your team is spending the most time on repetitive tasks.</p></div>
+<dl class="orange">
+  <dt>1</dt>
+  <dd><p>Map every tool your parish currently uses for communication, giving, and registration.</p></dd>
+</dl>
+<dl class="orange">
+  <dt>2</dt>
+  <dd><p>Track how many hours staff spend each week moving data between them.</p></dd>
+</dl>
+<dl class="orange">
+  <dt>3</dt>
+  <dd><p>Identify the top 2 integrations that would save the most time.</p></dd>
+</dl>
+<div class="callout-box callout4"><h3>Take the free Parish Digital Health Check</h3><p>Get a personalized report on how your parish's tools are working together — and where you're losing time to manual work.</p><p><a class="htmlButton htmlButton1" href="https://ecatholic.com/quiz" target="_blank">Take the Quiz</a></p></div>
+<p>Ready to bring everything together? <a href="https://ecatholic.com">Learn more about eCatholic</a>.</p>`;
+  updateOutput();
+}
+
+/* ============================================
+   BLOCK HANDLE — contextual per-block menu
+   The handle floats next to the active block. Clicking it opens
+   a menu that operates on a specific block reference, so actions
+   can never accidentally nest one block inside another.
+   ============================================ */
+const blockHandle = document.getElementById('blockHandle');
+const editorPanelBody = document.getElementById('editorPanelBody');
+let currentBlockGroup = null;
+
+function getCurrentBlockGroup() {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return null;
+  let node = sel.getRangeAt(0).commonAncestorContainer;
+  if (node.nodeType === 3) node = node.parentNode;
+  if (!editor.contains(node)) return null;
+  while (node && node !== editor && node.parentNode !== editor) {
+    node = node.parentNode;
+  }
+  if (!node || node === editor || node.parentNode !== editor) return null;
+  return classifyBlock(node);
+}
+
+function classifyBlock(block) {
+  const tag = block.tagName.toLowerCase();
+  if (tag === 'dl') {
+    return { type: 'dl-group', nodes: gatherAdjacentDls(block), currentDl: block };
+  }
+  if (tag === 'blockquote') {
+    return { type: 'blockquote', variant: block.className || '', nodes: [block] };
+  }
+  if (tag === 'div' && /\bcallout-box\b|callout\d/.test(block.className || '')) {
+    const m = (block.className || '').match(/callout(\d)/);
+    return { type: 'callout', variant: m ? m[1] : '2', nodes: [block] };
+  }
+  if (tag === 'div' && block.classList.contains('fluid-width-video-wrapper')) {
+    return { type: 'video', nodes: [block] };
+  }
+  if (/^h[1-6]$/.test(tag)) {
+    return { type: 'heading', level: tag, nodes: [block] };
+  }
+  if (tag === 'ul' || tag === 'ol') {
+    return { type: tag, nodes: [block] };
+  }
+  if (tag === 'p') {
+    const onlyChild = block.children.length === 1 ? block.children[0] : null;
+    if (onlyChild && onlyChild.tagName === 'IMG') return { type: 'image', nodes: [block], img: onlyChild };
+    if (onlyChild && onlyChild.tagName === 'A' && onlyChild.classList.contains('htmlButton')) {
+      return { type: 'button', nodes: [block], btn: onlyChild };
+    }
+    return { type: 'paragraph', nodes: [block] };
+  }
+  return { type: 'other', nodes: [block] };
+}
+
+function positionBlockHandle() {
+  // Don't reposition while the menu is open — it would jump out from under the cursor
+  if (activePopover && activePopover.dataset.popType === 'block-menu') return;
+  const group = getCurrentBlockGroup();
+  if (!group) {
+    blockHandle.style.display = 'none';
+    currentBlockGroup = null;
+    return;
+  }
+  const block = group.nodes[0];
+  const blockRect = block.getBoundingClientRect();
+  const bodyRect = editorPanelBody.getBoundingClientRect();
+  const top = blockRect.top - bodyRect.top + editorPanelBody.scrollTop + 4;
+  const previewEl = editorPanelBody.querySelector('.preview');
+  const previewRect = previewEl.getBoundingClientRect();
+  const left = previewRect.left - bodyRect.left - 32;
+  blockHandle.style.display = 'flex';
+  blockHandle.style.top = top + 'px';
+  blockHandle.style.left = Math.max(4, left) + 'px';
+  blockHandle.dataset.blockType = group.type;
+  currentBlockGroup = group;
+}
+
+/* ---- Block-menu rendering ---- */
+function blockMenuHeader(group) {
+  const labels = {
+    paragraph: 'Paragraph',
+    heading: 'Heading ' + (group.level ? group.level.slice(1) : ''),
+    blockquote: 'Blockquote',
+    callout: 'Callout ' + (group.variant || ''),
+    'dl-group': 'Numbered steps',
+    ul: 'Bullet list',
+    ol: 'Numbered list',
+    image: 'Image',
+    video: 'Video',
+    button: 'Button',
+    other: 'Block'
+  };
+  return `<div class="title"><i class="fa-solid fa-grip-vertical"></i> ${labels[group.type] || 'Block'}</div>`;
+}
+
+function styleMiniBlockquote(variant, isActive) {
+  const classMap = {
+    '': '', orange: 'bq-orange', blue: 'bq-blue',
+    'orange-border-left': 'bq-orange-left',
+    'tan-border-block': 'bq-tan-block',
+    'blue-border-block': 'bq-blue-block'
+  };
+  const cls = classMap[variant] || '';
+  return `<button class="block-style ${isActive ? 'on' : ''}" data-act="style:${variant}" type="button" title="${variant || 'Default tan'}">
+    <span class="mini-preview ${cls}"><span class="quote-mark">&ldquo;</span><span class="lines"><span></span><span></span></span></span>
+  </button>`;
+}
+function styleMiniCallout(num, isActive) {
+  const inner = String(num) === '1'
+    ? '<span style="color:#3297d6;font-weight:500;">Aa</span>'
+    : '<span class="lines"><span></span><span></span></span>';
+  return `<button class="block-style ${isActive ? 'on' : ''}" data-act="style:${num}" type="button" title="Callout ${num}">
+    <span class="mini-preview callout-${num}">${inner}</span>
+  </button>`;
+}
+function styleMiniDl(variant, isActive) {
+  const cls = 'dl-' + (variant || 'default');
+  return `<button class="block-style ${isActive ? 'on' : ''}" data-act="style:${variant}" type="button" title="${variant || 'Default'}">
+    <span class="mini-preview ${cls}"><span class="step-num">1</span><span class="step-line"></span></span>
+  </button>`;
+}
+
+function getConversionOptions(type) {
+  if (type === 'paragraph') return [
+    { target: 'callout:2', label: 'Callout' },
+    { target: 'blockquote:orange-border-left', label: 'Blockquote' },
+    { target: 'dl:', label: 'Numbered steps' },
+    { target: 'ul', label: 'Bullet list' },
+    { target: 'ol', label: 'Numbered list' }
+  ];
+  if (type === 'heading') return [
+    { target: 'p', label: 'Paragraph' },
+    { target: 'callout:2', label: 'Callout' },
+    { target: 'blockquote:orange-border-left', label: 'Blockquote' }
+  ];
+  if (type === 'blockquote') return [
+    { target: 'p', label: 'Paragraph' }, { target: 'callout:2', label: 'Callout' }, { target: 'dl:', label: 'Numbered steps' }
+  ];
+  if (type === 'callout') return [
+    { target: 'p', label: 'Paragraph' }, { target: 'blockquote:orange-border-left', label: 'Blockquote' }, { target: 'dl:', label: 'Numbered steps' }
+  ];
+  if (type === 'dl-group') return [
+    { target: 'p', label: 'Paragraphs' }, { target: 'ul', label: 'Bullet list' }, { target: 'ol', label: 'Numbered list' }, { target: 'blockquote:orange-border-left', label: 'Blockquote' }, { target: 'callout:2', label: 'Callout' }
+  ];
+  if (type === 'ul') return [
+    { target: 'ol', label: 'Numbered list' }, { target: 'dl:', label: 'Numbered steps' }, { target: 'p', label: 'Paragraphs' }
+  ];
+  if (type === 'ol') return [
+    { target: 'ul', label: 'Bullet list' }, { target: 'dl:', label: 'Numbered steps' }, { target: 'p', label: 'Paragraphs' }
+  ];
+  return [];
+}
+
+function openBlockMenu(anchorEl, group) {
+  let body = blockMenuHeader(group);
+
+  // --- Nested editable elements (button / image / video / inline link) ---
+  // Capture them *now*, before the popover opens and focus moves, so the
+  // references remain valid even if the selection collapses later.
+  const nestedButton = findButtonAt();
+  const nestedImage = findImageAt();
+  const nestedVideo = findVideoAt();
+  const nestedLink = findAncestor('a:not(.htmlButton)');
+  group._nested = {
+    button: nestedButton,
+    image: nestedImage,
+    video: nestedVideo,
+    link: nestedLink
+  };
+
+  const nestedPills = [];
+  if (nestedButton && group.type !== 'button') {
+    nestedPills.push('<button class="block-pill" data-act="nested:button" type="button"><i class="fa-solid fa-square-arrow-up-right"></i> Edit button</button>');
+  }
+  if (nestedImage && group.type !== 'image') {
+    nestedPills.push('<button class="block-pill" data-act="nested:image" type="button"><i class="fa-solid fa-image"></i> Edit image</button>');
+  }
+  if (nestedVideo && group.type !== 'video') {
+    nestedPills.push('<button class="block-pill" data-act="nested:video" type="button"><i class="fa-solid fa-video"></i> Edit video</button>');
+  }
+  if (nestedLink) {
+    nestedPills.push('<button class="block-pill" data-act="nested:link" type="button"><i class="fa-solid fa-link"></i> Edit link</button>');
+  }
+  if (nestedPills.length > 0) {
+    body += `<label>Inside this block</label><div class="block-pills">${nestedPills.join('')}</div>`;
+  }
+
+  // --- Style swap ---
+  if (group.type === 'blockquote') {
+    body += `<label>Style</label><div class="block-styles">
+      ${styleMiniBlockquote('orange', group.variant === 'orange')}
+      ${styleMiniBlockquote('blue', group.variant === 'blue')}
+      ${styleMiniBlockquote('orange-border-left', group.variant === 'orange-border-left')}
+      ${styleMiniBlockquote('tan-border-block', group.variant === 'tan-border-block')}
+      ${styleMiniBlockquote('blue-border-block', group.variant === 'blue-border-block')}
+    </div>`;
+  } else if (group.type === 'callout') {
+    body += `<label>Style</label><div class="block-styles">
+      ${[1,2,3,4,5].map(n => styleMiniCallout(n, group.variant === String(n))).join('')}
+    </div>`;
+  } else if (group.type === 'dl-group') {
+    const cls = group.nodes[0].className;
+    body += `<label>Style</label><div class="block-styles">
+      ${styleMiniDl('', cls === '')}
+      ${styleMiniDl('orange', cls === 'orange')}
+      ${styleMiniDl('blue', cls === 'blue')}
+      ${styleMiniDl('light-orange', cls === 'light-orange')}
+      ${styleMiniDl('dark-blue', cls === 'dark-blue')}
+    </div>`;
+  } else if (group.type === 'heading') {
+    body += `<label>Heading level</label><div class="block-pills">
+      ${[1,2,3,4,5].map(n => `<button class="block-pill ${group.level === 'h'+n ? 'on' : ''}" data-act="convert:h:${n}" type="button">H${n}</button>`).join('')}
+    </div>`;
+  }
+
+  // --- Step controls ---
+  if (group.type === 'dl-group') {
+    body += `<label>Steps</label><div class="block-pills">
+      <button class="block-pill" data-act="step-add" type="button"><i class="fa-solid fa-plus"></i> Add step below</button>
+      ${group.nodes.length > 1 ? '<button class="block-pill" data-act="step-remove" type="button"><i class="fa-solid fa-minus"></i> Remove this step</button>' : ''}
+    </div>`;
+  }
+
+  // --- Edit for media blocks ---
+  if (group.type === 'image' || group.type === 'video' || group.type === 'button') {
+    body += `<div class="block-pills" style="margin-top:10px;">
+      <button class="block-pill" data-act="edit" type="button"><i class="fa-solid fa-pen"></i> Edit ${group.type}</button>
+    </div>`;
+  }
+
+  // --- Convert to ---
+  const conversions = getConversionOptions(group.type);
+  if (conversions.length > 0) {
+    body += `<label>Convert to</label><div class="block-pills">
+      ${conversions.map(c => `<button class="block-pill" data-act="convert:${c.target}" type="button">${c.label}</button>`).join('')}
+    </div>`;
+  }
+
+  // --- Footer ---
+  body += `<div class="actions">
+    <button class="pop-btn danger" data-act="delete" type="button"><i class="fa-solid fa-trash"></i> Delete</button>
+    <button class="pop-btn" data-act="cancel" type="button">Close</button>
+  </div>`;
+
+  openPopover(anchorEl, body, (pop) => {
+    pop.dataset.popType = 'block-menu';
+    anchorEl.classList.add('menu-open');
+    pop.addEventListener('click', e => {
+      const btn = e.target.closest('[data-act]');
+      if (!btn) return;
+      handleBlockMenuAction(group, btn.dataset.act);
+    });
+  });
+}
+
+/* ---- Block-menu actions ---- */
+function handleBlockMenuAction(group, act) {
+  if (act === 'cancel') return closePopover();
+
+  if (act === 'delete') {
+    const fallback = group.nodes[0].previousElementSibling || group.nodes[group.nodes.length - 1].nextElementSibling;
+    group.nodes.forEach(n => n.remove());
+    if (fallback) placeCursorAtEndOf(fallback);
+    updateOutput();
+    closePopover();
+    return;
+  }
+
+  if (act === 'edit') {
+    closePopover();
+    if (group.type === 'image') { placeCursorIn(group.img || group.nodes[0]); openImagePopover(blockHandle); }
+    else if (group.type === 'video') { placeCursorIn(group.nodes[0]); openVideoPopover(blockHandle); }
+    else if (group.type === 'button') { placeCursorIn(group.btn); openButtonPopover(blockHandle); }
+    return;
+  }
+
+  // Nested element edits — button/image/video/link inside the active block.
+  // We captured live references when the menu opened, so place the cursor
+  // back into that element before opening the existing edit popover.
+  if (act.startsWith('nested:')) {
+    const which = act.slice(7);
+    const nested = group._nested && group._nested[which];
+    closePopover();
+    if (!nested) return;
+    placeCursorIn(nested);
+    if (which === 'button') openButtonPopover(blockHandle);
+    else if (which === 'image') openImagePopover(blockHandle);
+    else if (which === 'video') openVideoPopover(blockHandle);
+    else if (which === 'link') openLinkPopover(blockHandle);
+    return;
+  }
+
+  if (act === 'step-add') {
+    addStepBelow(group);
+    updateOutput();
+    closePopover();
+    return;
+  }
+  if (act === 'step-remove') {
+    removeStep(group);
+    updateOutput();
+    closePopover();
+    return;
+  }
+
+  if (act.startsWith('style:')) {
+    applyBlockStyle(group, act.slice(6));
+    updateOutput();
+    closePopover();
+    return;
+  }
+
+  if (act.startsWith('convert:')) {
+    convertBlock(group, act.slice(8));
+    updateOutput();
+    closePopover();
+    return;
+  }
+}
+
+function applyBlockStyle(group, variant) {
+  if (group.type === 'blockquote') {
+    if (variant) group.nodes[0].className = variant;
+    else group.nodes[0].removeAttribute('class');
+  } else if (group.type === 'callout') {
+    const block = group.nodes[0];
+    const classes = (block.className || '').split(/\s+/).filter(c => c && !/^callout\d+$/.test(c) && c !== 'callout-box');
+    classes.unshift('callout-box');
+    classes.push('callout' + variant);
+    block.className = classes.join(' ');
+  } else if (group.type === 'dl-group') {
+    group.nodes.forEach(dl => {
+      if (variant) dl.className = variant;
+      else dl.removeAttribute('class');
+    });
+  }
+}
+
+function extractGroupContent(group) {
+  if (group.type === 'dl-group') {
+    const items = [];
+    group.nodes.forEach(dl => {
+      dl.querySelectorAll('dd').forEach(dd => {
+        const inner = dd.children.length === 1 && dd.children[0].tagName === 'P'
+          ? dd.children[0].innerHTML
+          : dd.innerHTML;
+        if (inner.trim()) items.push(inner.trim());
+      });
+    });
+    return items;
+  }
+  if (group.type === 'callout' || group.type === 'blockquote') {
+    const node = group.nodes[0];
+    const ps = node.querySelectorAll(':scope > p');
+    if (ps.length > 0) return Array.from(ps).map(p => p.innerHTML.trim());
+    const kids = Array.from(node.children).filter(c => c.tagName !== 'BR');
+    if (kids.length > 0) return kids.map(c => c.innerHTML.trim());
+    return [node.innerHTML.trim()];
+  }
+  if (group.type === 'ul' || group.type === 'ol') {
+    return Array.from(group.nodes[0].querySelectorAll(':scope > li')).map(li => li.innerHTML.trim());
+  }
+  return [group.nodes[0].innerHTML.trim()];
+}
+
+function convertBlock(group, target) {
+  const items = extractGroupContent(group);
+  const arr = Array.isArray(items) ? items : [items];
+  let newHtml;
+
+  if (target === 'p') {
+    newHtml = arr.map(c => `<p>${c}</p>`).join('');
+  } else if (target.startsWith('h:')) {
+    const tag = 'h' + target.slice(2);
+    newHtml = `<${tag}>${arr.join(' ')}</${tag}>`;
+  } else if (target === 'ul' || target === 'ol') {
+    newHtml = `<${target}>${arr.map(i => `<li>${i}</li>`).join('')}</${target}>`;
+  } else if (target.startsWith('blockquote:')) {
+    newHtml = buildWrapper('blockquote', target.slice(11), arr);
+  } else if (target.startsWith('callout:')) {
+    newHtml = buildWrapper('callout', parseInt(target.slice(8), 10), arr);
+  } else if (target.startsWith('dl:')) {
+    newHtml = buildWrapper('dl', target.slice(3), arr);
+  }
+
+  if (newHtml) {
+    const firstNode = group.nodes[0];
+    firstNode.insertAdjacentHTML('beforebegin', newHtml);
+    const newFirst = firstNode.previousElementSibling;
+    group.nodes.forEach(n => n.remove());
+    if (newFirst) placeCursorAtEndOf(newFirst);
+  }
+}
+
+/* ---- DL group helpers (used by step controls) ---- */
+function addStepBelow(group) {
+  const currentDl = group.currentDl || group.nodes[group.nodes.length - 1];
+  const cls = currentDl.className;
+  const clsAttr = cls ? ` class="${cls}"` : '';
+  const tmp = document.createElement('div');
+  tmp.innerHTML = `<dl${clsAttr}><dt></dt><dd><p><span class="placeholder-text">New step.</span></p></dd></dl>`;
+  const newDl = tmp.firstElementChild;
+  currentDl.after(newDl);
+  renumberSteps(gatherAdjacentDls(newDl));
+  const ph = newDl.querySelector('.placeholder-text');
+  if (ph) {
+    const range = document.createRange();
+    range.selectNodeContents(ph);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    editor.focus();
+  }
+}
+
+function removeStep(group) {
+  const currentDl = group.currentDl;
+  if (!currentDl) return;
+  const all = gatherAdjacentDls(currentDl);
+  const idx = all.indexOf(currentDl);
+  const target = all[idx - 1] || all[idx + 1];
+  currentDl.remove();
+  const remaining = all.filter(n => n !== currentDl);
+  renumberSteps(remaining);
+  if (target) placeCursorAtEndOf(target.querySelector('dd') || target);
+}
+
+function renumberSteps(dls) {
+  dls.forEach((dl, i) => {
+    const dt = dl.querySelector('dt');
+    if (dt) dt.textContent = String(i + 1);
+  });
+}
+
+function placeCursorIn(el) {
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  range.collapse(true);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  editor.focus();
+}
+function placeCursorAtEndOf(el) {
+  if (!el) return;
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  editor.focus();
+}
+
+/* ============================================
+   EVENT WIRING
+   ============================================ */
+// Toolbar — single delegated handler
+document.getElementById('toolbar').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+
+  // Dropdown openers (the parent <div class="tb-dropdown"> wraps a button)
+  const ddParent = btn.closest('.tb-dropdown');
+  if (ddParent && btn.parentElement === ddParent) {
+    const name = ddParent.dataset.dropdown;
+    if (name && !btn.closest('.tb-dropdown-menu')) {
+      toggleDropdown(name);
+      return;
+    }
+  }
+
+  // Block type selection
+  if (btn.dataset.block) {
+    document.execCommand('formatBlock', false, btn.dataset.block);
+    closeAllDropdowns();
+    editor.focus();
+    updateOutput();
+    return;
+  }
+
+  // Inline command (bold, italic, lists, undo, redo)
+  if (btn.dataset.cmd) {
+    document.execCommand(btn.dataset.cmd);
+    editor.focus();
+    updateOutput();
+    return;
+  }
+
+  // Wrapper insert (blockquote, callout, dl)
+  if (btn.dataset.blockquote !== undefined) {
+    applyWrapper('blockquote', btn.dataset.blockquote);
+    return;
+  }
+  if (btn.dataset.callout) {
+    applyWrapper('callout', parseInt(btn.dataset.callout, 10));
+    return;
+  }
+  if (btn.dataset.dl !== undefined) {
+    applyWrapper('dl', btn.dataset.dl);
+    return;
+  }
+
+  // Popover-triggering actions
+  if (btn.dataset.action) {
+    const action = btn.dataset.action;
+    if (action === 'link') return openLinkPopover(btn);
+    if (action === 'button') return openButtonPopover(btn);
+    if (action === 'image') return openImagePopover(btn);
+    if (action === 'video') return openVideoPopover(btn);
+    if (action === 'clear') return openClearPopover(btn);
+    if (action === 'load-sample') { loadSample(); return; }
+  }
+});
+
+// Load-sample button lives in panel header, not toolbar — also handled here
+document.querySelectorAll('[data-action="load-sample"]').forEach(b => {
+  b.addEventListener('click', loadSample);
+});
+
+// Editor input → output
+editor.addEventListener('input', () => { updateOutput(); positionBlockHandle(); });
+editor.addEventListener('blur', updateOutput);
+editor.addEventListener('click', () => setTimeout(positionBlockHandle, 0));
+
+// Selection change → active state + block handle
+document.addEventListener('selectionchange', () => {
+  if (document.activeElement === editor || editor.contains(document.activeElement)) {
+    updateActiveState();
+    positionBlockHandle();
+  }
+});
+
+// Reposition the block handle on scroll and resize
+editorPanelBody.addEventListener('scroll', positionBlockHandle);
+window.addEventListener('resize', positionBlockHandle);
+
+// Block handle click — toggle the contextual menu
+blockHandle.addEventListener('click', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  if (activePopover && activePopover.dataset.popType === 'block-menu') {
+    closePopover();
+    return;
+  }
+  if (currentBlockGroup) openBlockMenu(blockHandle, currentBlockGroup);
+});
+
+// Paste as plain text (avoid Google Docs / Word styles)
+editor.addEventListener('paste', e => {
+  e.preventDefault();
+  const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+  const paras = text.split(/\n\s*\n/).map(p => {
+    return '<p>' + p.replace(/\n/g, '<br>') + '</p>';
+  }).join('');
+  document.execCommand('insertHTML', false, paras);
+});
+
+// HTML pane edits → sync back to preview (debounced)
+let htmlSyncTimer = null;
+htmlOutput.addEventListener('input', () => {
+  clearTimeout(htmlSyncTimer);
+  htmlSyncTimer = setTimeout(syncEditorFromHtmlPane, 350);
+});
+htmlOutput.addEventListener('blur', syncEditorFromHtmlPane);
+
+// Tab switching
+document.querySelectorAll('.output-tab').forEach(t => {
+  t.addEventListener('click', () => switchTab(t.dataset.tab, t));
+});
+
+// Copy HTML
+document.getElementById('copyBtn').addEventListener('click', copyHtml);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  // Cmd/Ctrl + K → open link popover
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k' && !e.shiftKey) {
+    if (document.activeElement === editor || editor.contains(document.activeElement)) {
+      e.preventDefault();
+      const linkBtn = document.querySelector('[data-action="link"]');
+      openLinkPopover(linkBtn);
+    }
+  }
+  // Cmd/Ctrl + Shift + C → copy HTML
+  if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'c') {
+    e.preventDefault();
+    copyHtml();
+  }
+});
+
+/* ============================================
+   INIT
+   ============================================ */
+const restored = loadDraft();
+if (!restored) loadSample();
+updateOutput();
+// Place the cursor in the first block so the handle has something to attach to
+const firstBlock = editor.querySelector(':scope > *');
+if (firstBlock) placeCursorIn(firstBlock);
+positionBlockHandle();
+</script>
+</body>
+</html>

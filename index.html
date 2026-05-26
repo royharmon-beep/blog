@@ -256,6 +256,13 @@ html, body {
   opacity: 0.55;
 }
 .mini-preview .lines span:nth-child(2) { width: 70%; }
+.mini-preview.bq-plain {
+  background: transparent;
+  border-color: transparent;
+  justify-content: flex-start;
+  padding-left: 14px;
+}
+.mini-preview.bq-plain .quote-mark { display: none; }
 .mini-preview.bq-orange { background: var(--brand-orange); }
 .mini-preview.bq-orange .quote-mark,
 .mini-preview.bq-orange .lines { color: #fff; }
@@ -1104,6 +1111,10 @@ html, body {
         </button>
         <div class="tb-dropdown-menu">
           <div class="tb-dropdown-section">Blockquote styles</div>
+          <button class="tb-dropdown-item" data-blockquote="" type="button">
+            <span class="mini-preview bq-plain"><span class="quote-mark">&ldquo;</span><span class="lines"><span></span><span></span></span></span>
+            <span class="label">Plain<small>Indented text, no decoration</small></span>
+          </button>
           <button class="tb-dropdown-item" data-blockquote="orange" type="button">
             <span class="mini-preview bq-orange"><span class="quote-mark">&ldquo;</span><span class="lines"><span></span><span></span></span></span>
             <span class="label">Orange<small>Filled, white text</small></span>
@@ -1423,9 +1434,15 @@ function buildWrapper(type, variantOrNum, content, opts = {}) {
       }
       if (items.length === 0) items.push(content);
     }
-    return items.map((item, i) =>
-      `<dl${cls}>\n  <dt>${i + 1}</dt>\n  <dd><p>${wrap(item)}</p></dd>\n</dl>`
-    ).join('\n');
+    // Fresh placeholder inserts get the H2-heading + body-paragraph pattern
+    // that matches eCatholic's typical step structure. Conversions and
+    // selection wraps keep the existing content as paragraph text.
+    return items.map((item, i) => {
+      const inner = opts.placeholder
+        ? `<h2>${wrap(item)}</h2><p><br></p>`
+        : `<p>${wrap(item)}</p>`;
+      return `<dl${cls}>\n  <dt>${i + 1}</dt>\n  <dd>${inner}</dd>\n</dl>`;
+    }).join('\n');
   }
 }
 
@@ -1439,9 +1456,9 @@ function defaultPlaceholder(type, variantOrNum) {
   }
   if (type === 'dl') {
     return [
-      'First step or item — replace with your content.',
-      'Second step or item.',
-      'Third step or item.'
+      'First step heading',
+      'Second step heading',
+      'Third step heading'
     ];
   }
 }
@@ -2437,13 +2454,13 @@ function blockMenuHeader(group) {
 
 function styleMiniBlockquote(variant, isActive) {
   const classMap = {
-    '': '', orange: 'bq-orange', blue: 'bq-blue',
+    '': 'bq-plain', orange: 'bq-orange', blue: 'bq-blue',
     'orange-border-left': 'bq-orange-left',
     'tan-border-block': 'bq-tan-block',
     'blue-border-block': 'bq-blue-block'
   };
   const cls = classMap[variant] || '';
-  return `<button class="block-style ${isActive ? 'on' : ''}" data-act="style:${variant}" type="button" title="${variant || 'Default tan'}">
+  return `<button class="block-style ${isActive ? 'on' : ''}" data-act="style:${variant}" type="button" title="${variant || 'Plain (no style)'}">
     <span class="mini-preview ${cls}"><span class="quote-mark">&ldquo;</span><span class="lines"><span></span><span></span></span></span>
   </button>`;
 }
@@ -2530,6 +2547,7 @@ function openBlockMenu(anchorEl, group) {
   // --- Style swap ---
   if (group.type === 'blockquote') {
     body += `<label>Style</label><div class="block-styles">
+      ${styleMiniBlockquote('', group.variant === '')}
       ${styleMiniBlockquote('orange', group.variant === 'orange')}
       ${styleMiniBlockquote('blue', group.variant === 'blue')}
       ${styleMiniBlockquote('orange-border-left', group.variant === 'orange-border-left')}
@@ -2740,7 +2758,8 @@ function addStepBelow(group) {
   const cls = currentDl.className;
   const clsAttr = cls ? ` class="${cls}"` : '';
   const tmp = document.createElement('div');
-  tmp.innerHTML = `<dl${clsAttr}><dt></dt><dd><p><span class="placeholder-text">New step.</span></p></dd></dl>`;
+  // Match the H2-heading + body-paragraph pattern used elsewhere in eCatholic steps.
+  tmp.innerHTML = `<dl${clsAttr}><dt></dt><dd><h2><span class="placeholder-text">Step heading</span></h2><p><br></p></dd></dl>`;
   const newDl = tmp.firstElementChild;
   currentDl.after(newDl);
   renumberSteps(gatherAdjacentDls(newDl));
